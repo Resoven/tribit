@@ -1,17 +1,9 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { useEffect, useState } from 'react';
 
 export default function Chat() {
-  const [mounted, setMounted] = useState(false);
   const { messages, input, handleInputChange, handleSubmit, error } = useChat();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return <div style={{ padding: '20px', color: 'black' }}>Initializing Tribit...</div>;
 
   return (
     <div style={{ backgroundColor: 'white', color: 'black', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
@@ -21,12 +13,12 @@ export default function Chat() {
       
       {error && (
         <div style={{ color: 'red', backgroundColor: '#fee2e2', padding: '10px', borderRadius: '5px', marginBottom: '10px' }}>
-          Connection Error: {error.message}
+          Error: {error.message}
         </div>
       )}
 
       <main style={{ paddingBottom: '100px' }}>
-        {messages.length === 0 && <p style={{ color: '#666' }}>Ask Tribit anything...</p>}
+        {messages.length === 0 && <p style={{ color: '#666' }}>Chat is ready. Say hello!</p>}
         {messages.map(m => (
           <div key={m.id} style={{ marginBottom: '15px', padding: '12px', background: m.role === 'user' ? '#f0f7ff' : '#f4f4f5', borderRadius: '8px' }}>
             <strong style={{ display: 'block', fontSize: '0.75rem', color: '#888', marginBottom: '4px' }}>
