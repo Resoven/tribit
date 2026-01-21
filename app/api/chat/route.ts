@@ -2,11 +2,17 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 30;
+export const runtime = 'nodejs';
 
-// This explicitly pulls the key from Railway's environment
+// Manual check to ensure Railway's environment variable is found
+const apiKey = process.env.OPENAI_API_KEY;
+
+if (!apiKey) {
+  throw new Error("OPENAI_API_KEY is not set in Railway variables!");
+}
+
 const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: apiKey,
 });
 
 export async function POST(req: Request) {
@@ -20,7 +26,7 @@ export async function POST(req: Request) {
 
     return result.toDataStreamResponse();
   } catch (error: any) {
-    console.error("LOGS ERROR:", error);
+    console.error("API ERROR:", error);
     return new Response(JSON.stringify({ error: error.message || "Internal Server Error" }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
