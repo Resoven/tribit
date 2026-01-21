@@ -1,45 +1,39 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { useEffect, useState } from 'react';
 
 export default function Chat() {
-  // We add 'error' here to see if the AI connection is failing
-  const { messages, input, handleInputChange, handleSubmit, error } = useChat();
+  const [mounted, setMounted] = useState(false);
+  const { messages, input, handleInputChange, handleSubmit } = useChat();
+
+  // This prevents the "Blank Page" hydration error
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <div style={{color: 'black', padding: '20px'}}>Loading Tribit...</div>;
 
   return (
-    <div className="flex flex-col w-full max-w-md py-24 mx-auto min-h-screen bg-white text-black p-4">
-      <h1 className="text-2xl font-bold mb-4 border-b pb-2">Tribit Chat</h1>
+    <div style={{ backgroundColor: 'white', color: 'black', minHeight: '100vh', padding: '20px' }}>
+      <h1 style={{ borderBottom: '1px solid #ccc' }}>Tribit AI</h1>
       
-      {error && (
-        <div className="p-4 mb-4 text-red-800 bg-red-100 rounded border border-red-300">
-          Error: {error.message}
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto mb-20">
-        {messages.length === 0 && (
-          <p className="text-gray-500 italic">No messages yet. Try typing below!</p>
-        )}
-        
+      <div style={{ paddingBottom: '100px' }}>
         {messages.map(m => (
-          <div key={m.id} className={`p-3 rounded-lg mb-2 ${m.role === 'user' ? 'bg-blue-50 ml-4' : 'bg-gray-100 mr-4'}`}>
-            <span className="font-bold block text-xs uppercase text-gray-400">
-              {m.role === 'user' ? 'You' : 'AI'}
-            </span>
-            <span className="whitespace-pre-wrap">{m.content}</span>
+          <div key={m.id} style={{ margin: '10px 0', padding: '10px', background: '#f4f4f4', borderRadius: '5px' }}>
+            <strong>{m.role === 'user' ? 'User: ' : 'AI: '}</strong>
+            {m.content}
           </div>
         ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t">
-        <div className="max-w-md mx-auto">
-          <input
-            className="w-full p-3 border border-gray-300 rounded shadow-sm text-black bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-            value={input}
-            placeholder="Say something to Tribit..."
-            onChange={handleInputChange}
-          />
-        </div>
+      <form onSubmit={handleSubmit} style={{ position: 'fixed', bottom: 0, left: 0, width: '100%', padding: '20px', background: 'white', borderTop: '1px solid #ccc' }}>
+        <input
+          style={{ width: '100%', maxWidth: '500px', padding: '10px', borderRadius: '5px', border: '1px solid #333', color: 'black' }}
+          value={input}
+          placeholder="Type a message..."
+          onChange={handleInputChange}
+        />
       </form>
     </div>
   );
