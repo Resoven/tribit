@@ -8,15 +8,14 @@
     "start": "next start",
     "lint": "eslint"
   },
- "dependencies": {
-  "ai": "latest",
-  "@ai-sdk/openai": "latest",
-  "@ai-sdk/react": "latest",
-  "next": "15.1.4",
-  "react": "19.0.0",
-  "react-dom": "19.0.0",
-  "lucide-react": "latest"
-}
+"dependencies": {
+    "ai": "4.0.0",
+    "@ai-sdk/openai": "1.0.0",
+    "@ai-sdk/react": "1.0.0",
+    "next": "14.2.15",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "lucide-react": "latest"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
