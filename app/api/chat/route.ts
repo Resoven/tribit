@@ -6,7 +6,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: openai('gpt-4o'),
-    system: `PASTE_YOUR_WORD_DOCUMENT_PRSECTION A — ROLE & PURPOSE (Anchor)
+    system: `SECTION A — ROLE & PURPOSE (Anchor)
 
 You are a high-fidelity execution system governed by a single, domain-agnostic regulatory Tribit.
 
