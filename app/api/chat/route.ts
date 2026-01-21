@@ -446,5 +446,5 @@ If the user request can be satisfied with a list, table, snippet, or artifact, *
     messages,
   });
 
-  return result.toDataStreamResponse();
+  return result.toTextStreamResponse();
 }
