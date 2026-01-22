@@ -3,10 +3,9 @@
 import { useChat } from '@ai-sdk/react';
 
 export default function Chat() {
-  // @ts-ignore
-  const { messages, input, handleInputChange, handleSubmit, error, isLoading } = useChat({
-    api: '/api/chat',
-  });
+  // We remove the { api: '/api/chat' } because it's the default 
+  // and it's currently causing a TypeScript conflict.
+  const { messages, input, handleInputChange, handleSubmit, error, isLoading } = useChat();
 
   return (
     <div style={{ backgroundColor: 'white', color: 'black', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
@@ -18,10 +17,10 @@ export default function Chat() {
           {messages.map((m) => (
             <div key={m.id} style={{ marginBottom: '15px' }}>
               <strong>{m.role === 'user' ? 'You: ' : 'AI: '}</strong>
-              <span style={{ whiteSpace: 'pre-wrap' }}>{(m as any).content}</span>
+              <span style={{ whiteSpace: 'pre-wrap' }}>{m.content}</span>
             </div>
           ))}
-          {isLoading && <div style={{ color: 'blue' }}>AI is thinking...</div>}
+          {isLoading && <div style={{ color: 'blue', marginTop: '10px' }}>AI is thinking...</div>}
         </div>
 
         {error && (
@@ -40,7 +39,13 @@ export default function Chat() {
           <button 
             type="submit" 
             disabled={isLoading}
-            style={{ padding: '10px 20px', backgroundColor: 'black', color: 'white', border: 'none', cursor: 'pointer' }}
+            style={{ 
+              padding: '10px 20px', 
+              backgroundColor: isLoading ? '#ccc' : 'black', 
+              color: 'white', 
+              border: 'none', 
+              cursor: 'pointer' 
+            }}
           >
             Send
           </button>
