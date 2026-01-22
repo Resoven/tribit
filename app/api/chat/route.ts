@@ -7,9 +7,10 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
+    // Check if the API key is actually present in Railway variables
     if (!process.env.OPENAI_API_KEY) {
-      console.error("CRITICAL ERROR: OPENAI_API_KEY is missing.");
-      return new Response('Error: API Key is missing', { status: 500 });
+      console.error("CRITICAL: OPENAI_API_KEY is missing from Railway.");
+      return new Response('API Key Missing', { status: 500 });
     }
 
     const result = await streamText({
@@ -17,17 +18,13 @@ export async function POST(req: Request) {
       messages,
     });
 
-    // Changed to the specific method requested by your compiler logs
+    // We are using the exact method your compiler asked for
     return result.toTextStreamResponse();
   } catch (error: any) {
-    console.error("AI GATEWAY ERROR:", error);
-    
-    return new Response(
-      JSON.stringify({ 
-        error: "Server Error", 
-        details: error.message 
-      }), 
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    console.error("Backend Error Details:", error);
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
