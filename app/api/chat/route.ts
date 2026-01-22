@@ -1,29 +1,28 @@
 import { streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
 
+// This allows for longer processing times if needed
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // 1. Safety check for the API Key
+    // Verification check for the API Key in Railway environment
     if (!process.env.OPENAI_API_KEY) {
-      console.error("CRITICAL: OPENAI_API_KEY is missing from Railway Variables.");
+      console.error("ERROR: OPENAI_API_KEY is missing from Railway variables.");
       return new Response('API Key Missing', { status: 500 });
     }
 
-    // 2. Start the AI Stream
     const result = await streamText({
       model: openai('gpt-4o-mini'),
       messages,
     });
 
-    // 3. Use the EXACT method the compiler is asking for
+    // Use toTextStreamResponse as requested by your compiler logs
     return result.toTextStreamResponse();
-
   } catch (error: any) {
-    console.error("Server-side Crash:", error);
+    console.error("Backend Crash Details:", error);
     return new Response(JSON.stringify({ error: error.message }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
