@@ -1,73 +1,63 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
 
 export default function Chat() {
+  // We use our own manual state for the text box
+  const [text, setText] = useState('');
+  
   // @ts-ignore
-  const { messages, input, handleInputChange, handleSubmit, error, isLoading } = useChat({
-    onError: (err) => {
-      console.error("Chat Error:", err);
-      alert("AI Error: " + err.message);
-    },
-  });
+  const { messages, append, isLoading, error } = useChat();
 
-  const handleManualSubmit = (e: React.FormEvent) => {
+  const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submit button clicked. Current input value:", input);
-    
-    // This check ensures we don't send empty strings to OpenAI
-    if (!input || input.trim() === "") {
-      console.log("Input was empty, blocking submit.");
+    console.log("Button clicked. Text in state is:", text);
+
+    if (!text.trim()) {
+      alert("Text box is empty!");
       return;
     }
-    
-    handleSubmit(e);
+
+    try {
+      // Manual trigger: we tell the SDK to send our manual 'text'
+      await append({ role: 'user', content: text });
+      setText(''); // Clear the box after sending
+    } catch (err: any) {
+      console.error("Append error:", err);
+    }
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', background: 'white', color: 'black', minHeight: '100vh' }}>
-      <h1 style={{ borderBottom: '2px solid black' }}>Tribit AI</h1>
+    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', color: 'black' }}>
+      <h1>Tribit AI (Manual Mode)</h1>
       
-      <div style={{ border: '1px solid #000', height: '400px', overflowY: 'auto', margin: '20px 0', padding: '15px' }}>
-        {messages.map((m: any) => (
-          <div key={m.id} style={{ marginBottom: '15px' }}>
-            <strong>{m.role === 'user' ? 'You' : 'AI'}:</strong>
-            <p style={{ margin: '5px 0' }}>{m.content}</p>
+      <div style={{ border: '2px solid black', height: '300px', overflowY: 'auto', padding: '10px', marginBottom: '10px' }}>
+        {messages.map((m: any, i: number) => (
+          <div key={i} style={{ marginBottom: '10px' }}>
+            <b>{m.role}:</b> {m.content}
           </div>
         ))}
-        {isLoading && <p style={{ color: 'blue' }}>AI is typing...</p>}
+        {isLoading && <p style={{ color: 'blue' }}>Thinking...</p>}
       </div>
 
       <form onSubmit={handleManualSubmit}>
         <input
-          value={input || ''} // Ensure it's never undefined
-          onChange={handleInputChange}
-          placeholder="Write your message..."
-          style={{ 
-            width: '100%', 
-            padding: '12px', 
-            marginBottom: '10px', 
-            border: '2px solid black',
-            color: 'black',
-            background: 'white'
-          }}
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)} // Direct React state update
+          placeholder="Type here..."
+          style={{ width: '100%', padding: '10px', marginBottom: '10px', border: '2px solid black', color: 'black' }}
         />
         <button 
           type="submit" 
-          disabled={isLoading}
-          style={{ 
-            width: '100%', 
-            padding: '12px', 
-            backgroundColor: 'black', 
-            color: 'white',
-            cursor: 'pointer' 
-          }}
+          style={{ width: '100%', padding: '10px', backgroundColor: 'black', color: 'white', fontWeight: 'bold' }}
         >
-          {isLoading ? 'THINKING...' : 'SEND'}
+          SEND MESSAGE
         </button>
       </form>
 
-      {error && <div style={{ color: 'red', marginTop: '10px' }}>{error.message}</div>}
+      {error && <p style={{ color: 'red' }}>{error.message}</p>}
     </div>
   );
 }
