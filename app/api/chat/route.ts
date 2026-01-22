@@ -1,32 +1,36 @@
+import { CoreMessage, streamText } from 'ai';
 import { openai } from '@ai-sdk/openai';
-import { streamText } from 'ai';
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    const { messages }: { messages: CoreMessage[] } = await req.json();
 
-    // 1. Check if the API key is actually present
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("Backend Error: OPENAI_API_KEY is missing");
-      return new Response('Configuration Error: Missing API Key', { status: 500 });
+    // Verify the API Key exists
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === '') {
+      console.error("CRITICAL ERROR: OPENAI_API_KEY is not defined in Railway.");
+      return new Response('Error: API Key is missing on the server.', { status: 500 });
     }
 
-    // 2. Setup the stream
     const result = await streamText({
       model: openai('gpt-4o-mini'),
       messages,
     });
 
-    // 3. Return the stream using the method the compiler requested
-    return result.toTextStreamResponse();
-    
+    // This is the most compatible response method for the current AI SDK
+    return result.toDataStreamResponse();
   } catch (error: any) {
-    console.error("Full Backend Crash Error:", error);
-    return new Response(JSON.stringify({ error: error.message || 'Internal Server Error' }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    console.error("AI GATEWAY ERROR:", error);
+    
+    // Send the actual error message back so we can see it in the browser console
+    return new Response(
+      JSON.stringify({ 
+        error: "Server Crash", 
+        details: error.message,
+        hint: "Check your Railway Variables and OpenAI Credit Balance." 
+      }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
