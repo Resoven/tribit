@@ -6,56 +6,60 @@ export default function Chat() {
   // @ts-ignore
   const { messages, input, handleInputChange, handleSubmit, error, isLoading } = useChat();
 
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Submit button was clicked!");
+    // This alert will prove if the JS is alive
+    if (!input) {
+      alert("Please type something first!");
+      return;
+    }
+    handleSubmit(e);
+  };
+
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', color: 'black', background: 'white', minHeight: '100vh' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>Tribit AI Chat</h1>
+    <div style={{ padding: '40px', maxWidth: '600px', margin: '0 auto', background: 'white', color: 'black' }}>
+      <h1 style={{ marginBottom: '20px' }}>Tribit AI Chat</h1>
       
-      <div style={{ border: '2px solid black', height: '400px', overflowY: 'auto', marginBottom: '20px', padding: '15px', background: '#f0f0f0' }}>
-        {messages.length === 0 && <p style={{ color: '#666' }}>No messages yet. Say hello!</p>}
-        
-        {/* We cast 'm' to 'any' here to bypass the Type error */}
+      <div style={{ border: '2px solid #000', height: '300px', overflowY: 'auto', marginBottom: '20px', padding: '10px' }}>
         {messages.map((m: any) => (
-          <div key={m.id} style={{ marginBottom: '15px', borderBottom: '1px solid #ddd', paddingBottom: '5px' }}>
-            <div style={{ fontWeight: 'bold', textTransform: 'uppercase', fontSize: '12px' }}>
-              {m.role === 'user' ? '👤 You' : '🤖 AI'}
-            </div>
-            <div style={{ whiteSpace: 'pre-wrap', marginTop: '5px' }}>
-              {m.content}
-            </div>
+          <div key={m.id} style={{ margin: '10px 0' }}>
+            <strong>{m.role}: </strong>{m.content}
           </div>
         ))}
-        
-        {isLoading && <p style={{ color: 'blue', fontWeight: 'bold' }}>AI is typing...</p>}
+        {isLoading && <p>AI is thinking...</p>}
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <form onSubmit={handleManualSubmit}>
         <input
           value={input}
           onChange={handleInputChange}
-          placeholder="Type your message here..."
-          style={{ padding: '12px', border: '2px solid black', fontSize: '16px', color: 'black', background: 'white' }}
+          placeholder="Type here..."
+          style={{ 
+            width: '100%', 
+            padding: '15px', 
+            fontSize: '16px', 
+            border: '2px solid blue', // Blue border to make it obvious
+            marginBottom: '10px',
+            color: 'black'
+          }}
         />
         <button 
           type="submit" 
-          disabled={isLoading}
           style={{ 
-            padding: '12px', 
-            backgroundColor: isLoading ? '#ccc' : 'black', 
+            width: '100%', 
+            padding: '15px', 
+            backgroundColor: 'blue', 
             color: 'white', 
-            fontWeight: 'bold', 
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            border: 'none'
+            fontSize: '18px',
+            fontWeight: 'bold',
+            cursor: 'pointer'
           }}
         >
-          {isLoading ? 'SENDING...' : 'SEND MESSAGE'}
+          SEND MESSAGE
         </button>
       </form>
-
-      {error && (
-        <div style={{ color: 'red', marginTop: '20px', padding: '10px', border: '1px solid red', background: '#fff5f5' }}>
-          <strong>Error:</strong> {error.message}
-        </div>
-      )}
+      {error && <p style={{ color: 'red' }}>{error.message}</p>}
     </div>
   );
 }
