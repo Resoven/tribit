@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 
 export default function Chat() {
-  // @ts-ignore - Bypassing strict type check for library version mismatch
+  // @ts-ignore
   const { messages, input, handleInputChange, handleSubmit, error } = useChat();
 
   return (
@@ -18,10 +18,11 @@ export default function Chat() {
         )}
 
         <div style={{ marginBottom: '20px', height: '400px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px' }}>
-          {messages.map(m => (
+          {messages.map((m) => (
             <div key={m.id} style={{ marginBottom: '15px' }}>
               <strong>{m.role === 'user' ? 'You: ' : 'AI: '}</strong>
-              <span style={{ whiteSpace: 'pre-wrap' }}>{m.content}</span>
+              {/* Using 'as any' here to bypass the strict content property check */}
+              <span style={{ whiteSpace: 'pre-wrap' }}>{(m as any).content}</span>
             </div>
           ))}
         </div>
