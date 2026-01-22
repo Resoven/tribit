@@ -11,5 +11,6 @@ export async function POST(req: Request) {
     messages,
   });
 
-  return result.toDataStreamResponse();
+  // Changed to toTextStreamResponse to satisfy the latest SDK types
+  return result.toTextStreamResponse();
 }
