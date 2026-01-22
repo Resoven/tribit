@@ -1,23 +1,30 @@
-export const dynamic = 'force-dynamic';
 import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 
-// This must be named POST for Next.js to handle the chat submission
+// 1. Force dynamic to prevent caching issues
+export const dynamic = 'force-dynamic';
+
+// 2. The actual Chat Handler (POST)
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
     const result = streamText({
-      model: openai('gpt-4o-mini'), // Ensure your OPENAI_API_KEY is in Railway variables
+      model: openai('gpt-4o-mini'), 
       messages,
     });
 
     return result.toTextStreamResponse();
-  } catch (error) {
-    console.error("API Error:", error);
-    return new Response(JSON.stringify({ error: "Check your API Key in Railway" }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+  } catch (error: any) {
+    console.error("AI API Error:", error);
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' } 
     });
   }
+}
+
+// 3. A GET handler just to prove the API is "alive"
+export async function GET() {
+  return new Response("API is active. Use POST to chat.", { status: 200 });
 }
