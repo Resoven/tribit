@@ -6,18 +6,7 @@ export default function Chat() {
   // @ts-ignore
   const { messages, input, handleInputChange, handleSubmit, error, isLoading } = useChat({
     api: '/api/chat',
-    onResponse: (response) => {
-      console.log('Received response from API:', response.status);
-    },
-    onError: (err) => {
-      console.error('Chat Error:', err);
-    }
   });
-
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    console.log('Form submitted with input:', input);
-    handleSubmit(e);
-  };
 
   return (
     <div style={{ backgroundColor: 'white', color: 'black', minHeight: '100vh', padding: '20px', fontFamily: 'sans-serif' }}>
@@ -25,7 +14,7 @@ export default function Chat() {
         <h1 style={{ borderBottom: '2px solid black', paddingBottom: '10px' }}>Tribit AI Chat</h1>
         
         <div style={{ marginBottom: '20px', height: '400px', overflowY: 'auto', border: '1px solid #ccc', padding: '10px', background: '#f9f9f9' }}>
-          {messages.length === 0 && <p style={{ color: '#888' }}>No messages yet. Type something below!</p>}
+          {messages.length === 0 && <p style={{ color: '#888' }}>No messages yet.</p>}
           {messages.map((m) => (
             <div key={m.id} style={{ marginBottom: '15px' }}>
               <strong>{m.role === 'user' ? 'You: ' : 'AI: '}</strong>
@@ -37,11 +26,11 @@ export default function Chat() {
 
         {error && (
           <div style={{ color: 'red', marginBottom: '10px', padding: '10px', border: '1px solid red' }}>
-            <strong>Error:</strong> {error.message}
+            Error: {error.message}
           </div>
         )}
 
-        <form onSubmit={handleFormSubmit} style={{ display: 'flex', gap: '10px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px' }}>
           <input
             value={input}
             placeholder="Say something..."
@@ -51,15 +40,9 @@ export default function Chat() {
           <button 
             type="submit" 
             disabled={isLoading}
-            style={{ 
-              padding: '10px 20px', 
-              backgroundColor: isLoading ? '#ccc' : 'black', 
-              color: 'white', 
-              border: 'none', 
-              cursor: isLoading ? 'not-allowed' : 'pointer' 
-            }}
+            style={{ padding: '10px 20px', backgroundColor: 'black', color: 'white', border: 'none', cursor: 'pointer' }}
           >
-            {isLoading ? '...' : 'Send'}
+            Send
           </button>
         </form>
       </div>
