@@ -1,56 +1,68 @@
 'use client';
 
-import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit, error, isLoading } = useChat({
-    onError: (err) => {
-      console.error("Chat Error:", err);
-    },
-  }) as any;
+  const [text, setText] = useState('');
+  const [messages, setMessages] = useState<{role: string, content: string}[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // This function forces the submission when the button is clicked
-  const onButtonClick = (e: any) => {
-    console.log("Button clicked manually! Current input:", input);
-    handleSubmit(e);
+  const handleSend = async () => {
+    if (!text.trim()) return;
+    
+    console.log("Sending manually:", text);
+    const newMessages = [...messages, { role: 'user', content: text }];
+    setMessages(newMessages);
+    setText('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        body: JSON.stringify({ messages: newMessages }),
+      });
+
+      if (!response.ok) throw new Error('Failed to connect to AI');
+
+      const data = await response.text(); // Assuming simple text response for now
+      setMessages([...newMessages, { role: 'assistant', content: data }]);
+    } catch (err) {
+      console.error("Fetch error:", err);
+      alert("Error: Could not reach the AI. Check your API route.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', background: 'white', color: 'black', minHeight: '100vh' }}>
-      <h1 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>Tribit AI</h1>
+    <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', background: 'white', color: 'black' }}>
+      <h1>Tribit AI (Direct Mode)</h1>
       
-      <div style={{ border: '2px solid black', height: '400px', overflowY: 'auto', marginBottom: '20px', padding: '15px', background: '#f9f9f9' }}>
-        {messages.map((m: any) => (
-          <div key={m.id} style={{ marginBottom: '15px' }}>
-            <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{m.role === 'user' ? 'YOU' : 'AI'}</div>
-            <div style={{ marginTop: '4px' }}>{m.content}</div>
+      <div style={{ border: '2px solid black', height: '400px', overflowY: 'auto', marginBottom: '20px', padding: '15px' }}>
+        {messages.map((m, i) => (
+          <div key={i} style={{ marginBottom: '15px' }}>
+            <strong>{m.role === 'user' ? 'YOU' : 'AI'}:</strong>
+            <p>{m.content}</p>
           </div>
         ))}
-        {isLoading && <p style={{ color: 'blue' }}>AI is typing...</p>}
+        {isLoading && <p style={{ color: 'blue' }}>AI is thinking...</p>}
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px' }}>
+      <div style={{ display: 'flex', gap: '10px' }}>
         <input
-          value={input}
-          onChange={handleInputChange}
-          placeholder="Type a message..."
-          style={{ flexGrow: 1, padding: '12px', border: '2px solid black', color: 'black', background: 'white' }}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Type here..."
+          style={{ flexGrow: 1, padding: '12px', border: '2px solid black', color: 'black' }}
         />
         <button 
-          type="button" 
-          onClick={onButtonClick}
+          onClick={handleSend}
           disabled={isLoading}
-          style={{ padding: '0 20px', backgroundColor: 'black', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}
+          style={{ padding: '0 20px', backgroundColor: 'black', color: 'white', cursor: 'pointer' }}
         >
           {isLoading ? '...' : 'SEND'}
         </button>
-      </form>
-
-      {error && (
-        <div style={{ color: 'red', marginTop: '10px', padding: '10px', border: '1px solid red' }}>
-          {error.message}
-        </div>
-      )}
+      </div>
     </div>
   );
 }
