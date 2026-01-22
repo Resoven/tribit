@@ -1,3 +1,4 @@
+
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 
@@ -7,12 +8,13 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
     
-    // Use the hardcoded key here just to test!
+    // This tells the app to get the key from Railway's settings
     const openai = createOpenAI({ 
-      apiKey: "sk-proj-..." 
+      apiKey: process.env.OPENAI_API_KEY 
     });
 
-    const result = await streamText({
+    // We remove 'await' here to allow the stream to start immediately
+    const result = streamText({
       model: openai('gpt-4o-mini'),
       messages,
     });
@@ -20,6 +22,9 @@ export async function POST(req: Request) {
     return result.toDataStreamResponse();
   } catch (error: any) {
     console.error("Chat Error:", error);
-    return new Response(error.message || "Internal Server Error", { status: 500 });
+    return new Response(
+      JSON.stringify({ error: error.message || "Internal Server Error" }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 }
