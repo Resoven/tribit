@@ -7,17 +7,17 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // Check if the API key exists in the environment
     if (!process.env.OPENAI_API_KEY) {
       return new Response('Missing OPENAI_API_KEY in Railway variables', { status: 500 });
     }
 
-    const result = streamText({
-      model: openai('gpt-4o-mini'), // Using a fast, reliable model
+    const result = await streamText({
+      model: openai('gpt-4o-mini'),
       messages,
     });
 
-    return result.toDataStreamResponse();
+    // Using the method the compiler suggested for your version
+    return result.toTextStreamResponse();
   } catch (error: any) {
     console.error("Backend Error:", error);
     return new Response(JSON.stringify({ error: error.message }), { 
