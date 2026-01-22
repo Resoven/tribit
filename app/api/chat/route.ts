@@ -7,8 +7,10 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
+    // Verification check for the API Key
     if (!process.env.OPENAI_API_KEY) {
-      return new Response('Missing OPENAI_API_KEY in Railway variables', { status: 500 });
+      console.error("CRITICAL: OPENAI_API_KEY is missing from Railway variables.");
+      return new Response('API Key Missing', { status: 500 });
     }
 
     const result = await streamText({
@@ -16,10 +18,10 @@ export async function POST(req: Request) {
       messages,
     });
 
-    // Using the method the compiler suggested for your version
+    // Use the method your specific version of the library requires
     return result.toTextStreamResponse();
   } catch (error: any) {
-    console.error("Backend Error:", error);
+    console.error("Backend Crash Details:", error);
     return new Response(JSON.stringify({ error: error.message }), { 
       status: 500,
       headers: { 'Content-Type': 'application/json' }
