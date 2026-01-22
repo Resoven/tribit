@@ -1,30 +1,25 @@
-
-import { createOpenAI } from '@ai-sdk/openai';
+import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 
-export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
-    
-    // This tells the app to get the key from Railway's settings
-    const openai = createOpenAI({ 
-      apiKey: process.env.OPENAI_API_KEY 
-    });
 
-    // We remove 'await' here to allow the stream to start immediately
-    const result = streamText({
+    const result = await streamText({
       model: openai('gpt-4o-mini'),
       messages,
     });
 
-    return result.toDataStreamResponse();
+    // Updated this line to match the new library version
+    return result.toTextStreamResponse();
+    
   } catch (error: any) {
     console.error("Chat Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Internal Server Error" }), 
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: "Something went wrong", details: error.message }),
+      { status: 500 }
     );
   }
 }
