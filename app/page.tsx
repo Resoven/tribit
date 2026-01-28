@@ -1,5 +1,4 @@
 'use client';
-
 export const dynamic = 'force-dynamic';
 
 import { useChat } from '@ai-sdk/react';
@@ -73,7 +72,7 @@ export default function Chat() {
             </div>
           )}
 
-          {messages.map((m) => (
+          {messages?.map((m) => (
             <div key={m.id} style={{ 
               marginBottom: '35px', display: 'flex', flexDirection: 'column',
               alignItems: m.role === 'user' ? 'flex-end' : 'flex-start'
