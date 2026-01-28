@@ -46,7 +46,7 @@ export default function Chat() {
         
         for (const line of lines) {
           if (line.startsWith('0:')) {
-            // This safely extracts text between the first and last quote
+            // Strip the 0:" prefix and " suffix from the AI SDK stream
             const content = line.slice(line.indexOf('"') + 1, line.lastIndexOf('"'));
             assistantText += content.replace(/\\n/g, '\n');
           }
@@ -59,21 +59,22 @@ export default function Chat() {
         });
       }
     } catch (err) {
-      alert("System Error: Build might have failed.");
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec' }}>
-      <header style={{ padding: '15px', textAlign: 'center', borderBottom: '1px solid #333' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#000', color: '#fff', fontFamily: 'sans-serif' }}>
+      <header style={{ padding: '20px', textAlign: 'center', borderBottom: '1px solid #333' }}>
         <strong>Tribit AI ✨</strong>
       </header>
+
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           {messages.map((m, i) => (
-            <div key={i} style={{ marginBottom: '25px' }}>
+            <div key={i} style={{ marginBottom: '20px' }}>
               <div style={{ fontWeight: 'bold', fontSize: '0.7rem', opacity: 0.5, marginBottom: '5px' }}>
                 {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
@@ -83,11 +84,17 @@ export default function Chat() {
           <div ref={messagesEndRef} />
         </div>
       </div>
-      <form onSubmit={sendMessage} style={{ padding: '20px', maxWidth: '700px', margin: '0 auto', width: '100%' }}>
-        <div style={{ display: 'flex', gap: '10px', backgroundColor: '#212121', padding: '12px', borderRadius: '15px' }}>
-          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Message..." style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none' }} />
-          <button type="submit" disabled={isLoading} style={{ background: '#fff', color: '#000', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', border: 'none' }}>
-            {isLoading ? '...' : '↑'}
+
+      <form onSubmit={sendMessage} style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '10px', backgroundColor: '#111', padding: '10px', borderRadius: '10px', border: '1px solid #333' }}>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type a message..."
+            style={{ flex: 1, background: 'none', border: 'none', color: '#fff', outline: 'none' }}
+          />
+          <button type="submit" disabled={isLoading} style={{ background: '#fff', color: '#000', borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', border: 'none' }}>
+            ↑
           </button>
         </div>
       </form>
