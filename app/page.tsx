@@ -11,38 +11,24 @@ export default function Chat() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [localInput, setLocalInput] = useState('');
   
-  // Basic useChat without complex configuration to ensure 'append' works
-  const { messages, append, isLoading } = useChat();
-
+  // Use the standard hook variables
+  const { messages, input, setInput, handleSubmit, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Sync our local typing with the SDK's internal state
+  useEffect(() => {
+    setInput(localInput);
+  }, [localInput, setInput]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   if (!mounted) return null;
-
-  async function handleFormSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!localInput.trim() || isLoading) return;
-
-    const content = localInput;
-    setLocalInput('');
-
-    try {
-      // Using append this way is the most stable method for Next.js 15
-      await append({
-        role: 'user',
-        content: content,
-      });
-    } catch (err) {
-      console.error("Submission error:", err);
-    }
-  }
 
   const theme = {
     bg: isDarkMode ? '#0d0d0d' : '#ffffff',
@@ -67,9 +53,7 @@ export default function Chat() {
               <div style={{ fontWeight: 'bold', fontSize: '0.7rem', marginBottom: '5px', opacity: 0.5 }}>
                 {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
-              <div style={{ lineHeight: '1.6' }}>
-                <ReactMarkdown>{m.content}</ReactMarkdown>
-              </div>
+              <ReactMarkdown>{m.content}</ReactMarkdown>
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -77,7 +61,12 @@ export default function Chat() {
       </div>
 
       <div style={{ padding: '20px' }}>
-        <form onSubmit={handleFormSubmit} style={{ maxWidth: '720px', margin: '0 auto' }}>
+        {/* We use the SDK's handleSubmit but keep our localInput for the UI */}
+        <form onSubmit={(e) => {
+            handleSubmit(e);
+            setLocalInput(''); // Clear the UI box
+          }} 
+          style={{ maxWidth: '720px', margin: '0 auto' }}>
           <div style={{ display: 'flex', gap: '10px', backgroundColor: theme.inputBg, padding: '12px', borderRadius: '15px', border: `1px solid ${theme.border}` }}>
             <input
               value={localInput}
@@ -89,7 +78,7 @@ export default function Chat() {
               type="submit" 
               disabled={isLoading || !localInput.trim()}
               style={{ 
-                backgroundColor: (localInput.trim() === '' || isLoading) ? '#666' : theme.text, 
+                backgroundColor: (!localInput.trim() || isLoading) ? '#666' : theme.text, 
                 color: theme.bg, border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' 
               }}
             >
