@@ -1,77 +1,50 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useChat } from '@ai-sdk/react';
-import { useEffect, useState, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { useState, useEffect } from 'react';
 
 export default function Chat() {
   const [mounted, setMounted] = useState(false);
-  const [localInput, setLocalInput] = useState('');
   
-  // EXPLICIT API PATH: This prevents the "u is not a function" error
-  const { messages, append, isLoading } = useChat({
+  // Explicitly defining the API route here is safer for Next.js 15
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
     api: '/api/chat',
-    onError: (error) => {
-      console.error("Chat Hook Error:", error);
-    }
   });
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  // Prevents hydration mismatch which causes the "Application Error"
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
   if (!mounted) return null;
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!localInput.trim() || isLoading) return;
-
-    const val = localInput;
-    setLocalInput('');
-
-    try {
-      await append({ role: 'user', content: val });
-    } catch (err) {
-      console.error("Manual Append Crash:", err);
-    }
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec' }}>
-      <header style={{ padding: '15px', borderBottom: '1px solid #333', textAlign: 'center' }}>
-        <strong>Tribit AI ✨</strong>
-      </header>
-
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
-          {messages?.map((m) => (
-            <div key={m.id} style={{ marginBottom: '20px' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '0.8rem', opacity: 0.5 }}>{m.role === 'user' ? 'YOU' : 'TRIBIT'}</div>
-              <ReactMarkdown>{m.content}</ReactMarkdown>
+    <div style={{ padding: '20px', backgroundColor: '#000', minHeight: '100vh', color: '#fff' }}>
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <h1 style={{ textAlign: 'center' }}>Tribit AI</h1>
+        
+        <div style={{ marginBottom: '100px' }}>
+          {messages.map(m => (
+            <div key={m.id} style={{ marginBottom: '10px', color: m.role === 'user' ? '#fff' : '#00ff00' }}>
+              <strong>{m.role === 'user' ? 'You: ' : 'AI: '}</strong>
+              {m.content}
             </div>
           ))}
-          <div ref={messagesEndRef} />
         </div>
-      </div>
 
-      <div style={{ padding: '20px' }}>
-        <form onSubmit={handleSend} style={{ maxWidth: '720px', margin: '0 auto', display: 'flex', gap: '10px', backgroundColor: '#212121', padding: '10px', borderRadius: '15px' }}>
+        <form onSubmit={handleSubmit} style={{ position: 'fixed', bottom: '20px', width: '100%', maxWidth: '600px', display: 'flex', gap: '10px' }}>
           <input
-            value={localInput}
-            onChange={(e) => setLocalInput(e.target.value)}
-            placeholder="Type a message..."
-            style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none' }}
+            value={input}
+            onChange={handleInputChange}
+            placeholder="Say something..."
+            style={{ flex: 1, padding: '10px', borderRadius: '5px', border: '1px solid #333', background: '#222', color: '#fff' }}
           />
-          <button type="submit" disabled={isLoading || !localInput.trim()} style={{ background: '#fff', color: '#000', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' }}>
-            ↑
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            style={{ padding: '10px 20px', borderRadius: '5px', backgroundColor: '#fff', color: '#000', cursor: 'pointer' }}
+          >
+            {isLoading ? '...' : 'Send'}
           </button>
         </form>
       </div>
