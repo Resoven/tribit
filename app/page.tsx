@@ -8,38 +8,48 @@ import ReactMarkdown from 'react-markdown';
 
 export default function Chat() {
   const [mounted, setMounted] = useState(false);
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  
+  // We use a fallback empty string for 'input' to prevent the .trim() crash
+  const { messages = [], input = '', handleInputChange, handleSubmit, isLoading = false } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Force sync with browser
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messages?.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
-  // If we aren't in the browser yet, show a simple loading state
-  if (!mounted) return <div style={{ background: '#000', height: '100vh' }} />;
+  // Safety: If not mounted or variables are missing, show a loading shell
+  if (!mounted) return <div style={{ background: '#0d0d0d', height: '100vh' }} />;
+
+  const isInputEmpty = !input || input.trim().length === 0;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec', fontFamily: 'sans-serif' }}>
-      <header style={{ padding: '15px', textAlign: 'center', borderBottom: '1px solid #333' }}>
+      <header style={{ padding: '15px', textAlign: 'center', borderBottom: '1px solid #333', background: '#0d0d0d' }}>
         <strong>Tribit AI ✨</strong>
       </header>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+          {messages.length === 0 && (
+            <div style={{ textAlign: 'center', marginTop: '20vh', opacity: 0.3 }}>
+              <h1>How can I help?</h1>
+            </div>
+          )}
           {messages.map((m) => (
-            <div key={m.id} style={{ marginBottom: '20px', textAlign: m.role === 'user' ? 'right' : 'left' }}>
+            <div key={m.id} style={{ marginBottom: '25px', textAlign: 'left' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '0.8rem', marginBottom: '5px', opacity: 0.5 }}>
+                {m.role === 'user' ? 'YOU' : 'TRIBIT'}
+              </div>
               <div style={{ 
-                display: 'inline-block', 
-                padding: '10px 15px', 
-                borderRadius: '15px', 
-                backgroundColor: m.role === 'user' ? '#2f2f2f' : 'transparent',
-                maxWidth: '80%',
-                textAlign: 'left'
+                padding: '5px 0', 
+                lineHeight: '1.6',
+                color: m.role === 'user' ? '#fff' : '#ccc'
               }}>
                 <ReactMarkdown>{m.content}</ReactMarkdown>
               </div>
@@ -49,31 +59,42 @@ export default function Chat() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ padding: '20px', maxWidth: '720px', margin: '0 auto', width: '100%' }}>
-        <div style={{ display: 'flex', gap: '10px', backgroundColor: '#212121', padding: '10px', borderRadius: '15px' }}>
-          <input
-            value={input}
-            onChange={handleInputChange}
-            placeholder="Type a message..."
-            style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none' }}
-          />
-          <button 
-            type="submit" 
-            disabled={isLoading || !input.trim()}
-            style={{ 
-              backgroundColor: input.trim() ? '#fff' : '#555', 
-              color: '#000', 
-              border: 'none', 
-              borderRadius: '50%', 
-              width: '30px', 
-              height: '30px', 
-              cursor: 'pointer' 
-            }}
-          >
-            ↑
-          </button>
-        </div>
-      </form>
+      <div style={{ padding: '20px', background: '#0d0d0d' }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: '720px', margin: '0 auto' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '10px', 
+            backgroundColor: '#212121', 
+            padding: '12px', 
+            borderRadius: '15px',
+            border: '1px solid #333'
+          }}>
+            <input
+              value={input}
+              onChange={handleInputChange}
+              placeholder="Message Tribit..."
+              style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none', fontSize: '16px' }}
+            />
+            <button 
+              type="submit" 
+              disabled={isLoading || isInputEmpty}
+              style={{ 
+                backgroundColor: (isInputEmpty || isLoading) ? '#444' : '#fff', 
+                color: '#000', 
+                border: 'none', 
+                borderRadius: '50%', 
+                width: '32px', 
+                height: '32px', 
+                cursor: (isInputEmpty || isLoading) ? 'default' : 'pointer',
+                fontWeight: 'bold',
+                transition: 'background 0.2s'
+              }}
+            >
+              {isLoading ? '...' : '↑'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
