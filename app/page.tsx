@@ -4,12 +4,16 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 export default function Chat() {
+  const [mounted, setMounted] = useState(false);
   const [messages, setMessages] = useState<{role: string, content: string}[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => { setMounted(true); }, []);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  if (!mounted) return null;
 
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault();
@@ -33,7 +37,7 @@ export default function Chat() {
       const decoder = new TextDecoder();
       let assistantText = '';
 
-      // Create the TRIBIT bubble
+      // Add the TRIBIT bubble
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
       while (true) {
@@ -41,9 +45,8 @@ export default function Chat() {
         if (done) break;
         
         const chunk = decoder.decode(value);
-        
-        // This regex cleans the "0:text" format common in AI SDK streams
         const lines = chunk.split('\n');
+        
         for (const line of lines) {
           if (line.startsWith('0:')) {
             const content = line.slice(line.indexOf('"') + 1, line.lastIndexOf('"'));
@@ -59,30 +62,73 @@ export default function Chat() {
       }
     } catch (err) {
       console.error(err);
+      alert("System Error: Build might be out of date.");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#000', color: '#fff' }}>
-      <header style={{ padding: '20px', textAlign: 'center', borderBottom: '1px solid #333' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec', fontFamily: 'sans-serif' }}>
+      <header style={{ padding: '15px', textAlign: 'center', borderBottom: '1px solid #333' }}>
         <strong>Tribit AI ✨</strong>
       </header>
+
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {messages.map((m, i) => (
-            <div key={i} style={{ marginBottom: '20px' }}>
-              <div style={{ fontWeight: 'bold', fontSize: '0.7rem', opacity: 0.5 }}>{m.role.toUpperCase()}</div>
-              <ReactMarkdown>{m.content}</ReactMarkdown>
+            <div key={i} style={{ marginBottom: '25px' }}>
+              <div style={{ fontWeight: 'bold', fontSize: '0.7rem', opacity: 0.5, marginBottom: '5px' }}>
+                {m.role === 'user' ? 'YOU' : 'TRIBIT'}
+              </div>
+              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                <ReactMarkdown>{m.content}</ReactMarkdown>
+              </div>
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
       </div>
-      <form onSubmit={sendMessage} style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', width: '100%' }}>
-        <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Message..." style={{ width: '100%', padding: '12px', background: '#111', border: '1px solid #333', color: '#fff', borderRadius: '10px' }} />
-      </form>
+
+      <div style={{ padding: '20px', backgroundColor: '#0d0d0d' }}>
+        <form onSubmit={sendMessage} style={{ maxWidth: '700px', margin: '0 auto', width: '100%' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            gap: '10px', 
+            backgroundColor: '#212121', 
+            padding: '8px 12px', 
+            borderRadius: '24px', 
+            border: '1px solid #444' 
+          }}>
+            <input 
+              value={input} 
+              onChange={(e) => setInput(e.target.value)} 
+              placeholder="Message Tribit..." 
+              style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none', fontSize: '16px', padding: '8px 0' }} 
+            />
+            <button 
+              type="submit" 
+              disabled={isLoading || !input.trim()} 
+              style={{ 
+                background: isLoading || !input.trim() ? '#555' : '#fff', 
+                color: '#000', 
+                borderRadius: '50%', 
+                width: '32px', 
+                height: '32px', 
+                cursor: input.trim() ? 'pointer' : 'default', 
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}
+            >
+              <span style={{ fontSize: '18px', fontWeight: 'bold' }}>{isLoading ? '...' : '↑'}</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

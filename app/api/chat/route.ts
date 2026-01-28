@@ -10,14 +10,18 @@ export async function POST(req: Request) {
     const result = await streamText({
       model: openai('gpt-4o-mini'),
       messages,
-      system: "You are Tribit, a helpful AI assistant. Use markdown.",
+      system: "You are Tribit, a helpful AI assistant. Use markdown for formatting.",
     });
 
-    // Directly returning the stream to bypass versioning issues
+    // Directly returning the stream to avoid helper function conflicts
     return new Response(result.fullStream, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
   } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    console.error("API Error:", error.message);
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
