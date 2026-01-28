@@ -37,7 +37,6 @@ export default function Chat() {
       const decoder = new TextDecoder();
       let assistantText = '';
 
-      // Add the TRIBIT bubble
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
       while (true) {
@@ -49,6 +48,7 @@ export default function Chat() {
         
         for (const line of lines) {
           if (line.startsWith('0:')) {
+            // Clean the "0:..." wrapper from the AI SDK stream
             const content = line.slice(line.indexOf('"') + 1, line.lastIndexOf('"'));
             assistantText += content.replace(/\\n/g, '\n');
           }
@@ -81,9 +81,7 @@ export default function Chat() {
               <div style={{ fontWeight: 'bold', fontSize: '0.7rem', opacity: 0.5, marginBottom: '5px' }}>
                 {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
-              <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-                <ReactMarkdown>{m.content}</ReactMarkdown>
-              </div>
+              <ReactMarkdown>{m.content}</ReactMarkdown>
             </div>
           ))}
           <div ref={messagesEndRef} />

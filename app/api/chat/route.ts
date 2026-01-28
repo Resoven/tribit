@@ -13,15 +13,15 @@ export async function POST(req: Request) {
       system: "You are Tribit, a helpful AI assistant. Use markdown for formatting.",
     });
 
-    // Directly returning the stream to avoid helper function conflicts
+    // We return the raw stream to bypass SDK version mismatches
     return new Response(result.fullStream, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
   } catch (error: any) {
     console.error("API Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), { 
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' } 
     });
   }
 }
