@@ -27,27 +27,34 @@ export default function Chat() {
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: [...messages, userMsg] }),
       });
 
-      if (!response.ok) throw new Error('Failed to connect to API');
+      if (!response.ok) throw new Error('Failed to connect');
 
-      // Simple reader for the stream
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let assistantText = '';
 
+      // Add the empty assistant bubble immediately
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
       while (true) {
         const { done, value } = await reader!.read();
         if (done) break;
         
-        // The AI SDK sends data in a specific format (e.g., 0:"text")
-        // This regex cleans the stream markers for display
         const chunk = decoder.decode(value);
-        const cleanChunk = chunk.replace(/[0-9]:"|"/g, '').replace(/\\n/g, '\n');
-        assistantText += cleanChunk;
+        
+        // CLEANING THE STREAM: OpenAI/Vercel format looks like 0:"text"
+        // This regex extracts just the text inside the quotes
+        const lines = chunk.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('0:')) {
+            const content = line.slice(3, -1); // Remove 0:" and "
+            assistantText += content.replace(/\\n/g, '\n');
+          }
+        }
 
         setMessages(prev => {
           const updated = [...prev];
@@ -57,41 +64,34 @@ export default function Chat() {
       }
     } catch (err) {
       console.error(err);
-      alert("System Error: Could not reach the AI.");
+      alert("System Error: Check logs.");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec', fontFamily: 'sans-serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec' }}>
       <header style={{ padding: '15px', textAlign: 'center', borderBottom: '1px solid #333' }}>
         <strong>Tribit AI ✨</strong>
       </header>
-
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {messages.map((m, i) => (
             <div key={i} style={{ marginBottom: '20px' }}>
               <div style={{ fontWeight: 'bold', fontSize: '0.7rem', opacity: 0.5, marginBottom: '5px' }}>
-                {m.role.toUpperCase()}
+                {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
-              <ReactMarkdown>{m.content}</ReactMarkdown>
+              <div style={{ whiteSpace: 'pre-wrap' }}>{m.content}</div>
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
       </div>
-
       <form onSubmit={sendMessage} style={{ padding: '20px', maxWidth: '700px', margin: '0 auto', width: '100%' }}>
         <div style={{ display: 'flex', gap: '10px', backgroundColor: '#212121', padding: '12px', borderRadius: '15px', border: '1px solid #444' }}>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Message Tribit..."
-            style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none', fontSize: '16px' }}
-          />
-          <button type="submit" disabled={isLoading} style={{ background: '#fff', color: '#000', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' }}>
+          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Message Tribit..." style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none' }} />
+          <button type="submit" disabled={isLoading} style={{ background: '#fff', color: '#000', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', border: 'none' }}>
             {isLoading ? '...' : '↑'}
           </button>
         </div>
