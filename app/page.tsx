@@ -106,7 +106,7 @@ export default function Chat() {
       </div>
 
       <div style={{ padding: '0 20px 30px 20px', backgroundColor: theme.bg }}>
-        <form onSubmit={handleSubmit} style={{ maxWidth: '720px', margin: '0 auto' }}>
+        <form onSubmit={(e) => { e.preventDefault(); alert("Click Detected!"); handleSubmit(e); }} style={{ maxWidth: '720px', margin: '0 auto' }}>
           <div style={{ 
             display: 'flex', alignItems: 'flex-end', backgroundColor: theme.inputBg, 
             borderRadius: '26px', border: `1px solid ${theme.borderColor}`, padding: '8px 12px'
@@ -121,7 +121,7 @@ export default function Chat() {
             />
             <button 
               type="submit" 
-              disabled={isLoading || !input?.trim()}
+              disabled={false}
               style={{ 
                 width: '32px', height: '32px', borderRadius: '50%', border: 'none', 
                 backgroundColor: (input?.trim() && !isLoading) ? theme.text : '#ccc', 
