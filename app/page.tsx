@@ -6,15 +6,20 @@ import { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 export default function Chat() {
+  const [mounted, setMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
-  // destructuring useChat with defaults to prevent initialization errors
   const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading } = useChat({
     api: '/api/chat',
     onError: (error) => console.error("Chat Hook Error:", error),
   });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Set mounted to true once component hits the browser
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const theme = {
     bg: isDarkMode ? '#0d0d0d' : '#ffffff',
@@ -30,7 +35,6 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Handler to allow 'Enter' key to submit
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -38,6 +42,9 @@ export default function Chat() {
       handleSubmit(formEvent as unknown as React.FormEvent<HTMLFormElement>);
     }
   };
+
+  // Prevent server-side rendering mismatch
+  if (!mounted) return null;
 
   return (
     <div style={{ 
@@ -117,7 +124,7 @@ export default function Chat() {
               disabled={isLoading || !input?.trim()}
               style={{ 
                 width: '32px', height: '32px', borderRadius: '50%', border: 'none', 
-                backgroundColor: (input?.trim() && !isLoading) ? theme.text : '#ccc' 
+                backgroundColor: (input?.trim() && !isLoading) ? theme.text : '#ccc', 
                 color: theme.bg, 
                 cursor: (input?.trim() && !isLoading) ? 'pointer' : 'default',
                 display: 'flex',
