@@ -13,9 +13,13 @@ export async function POST(req: Request) {
       system: "You are Tribit, a helpful AI assistant.",
     });
 
-    // Instead of calling a helper function that might not exist, 
-    // we return the data stream directly.
-    return result.toDataStreamResponse();
+    // Instead of result.toDataStreamResponse(), we use the raw pipe
+    // This bypasses the version compatibility check entirely
+    return new Response(result.fullStream, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+      },
+    });
   } catch (error: any) {
     console.error("API Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), { 
