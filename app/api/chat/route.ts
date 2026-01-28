@@ -7,19 +7,16 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // Safety: If instructions.txt fails, use a default prompt
-    const systemPrompt = "You are Tribit, a helpful AI assistant.";
-
     const result = await streamText({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-4o-mini'), 
       messages,
-      system: systemPrompt,
+      system: "You are Tribit, a helpful AI assistant.",
     });
 
     return result.toDataStreamResponse();
   } catch (error: any) {
-    // This logs the SPECIFIC error to your Railway dashboard
-    console.error("OPENAI_ERROR:", error.message);
+    // This logs the SPECIFIC reason (like "Invalid API Key") to Railway logs
+    console.error("DEBUG_OPENAI_ERROR:", error.message);
     
     return new Response(JSON.stringify({ 
       error: "Server Error", 
