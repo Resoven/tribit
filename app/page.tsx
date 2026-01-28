@@ -8,8 +8,13 @@ import ReactMarkdown from 'react-markdown';
 
 export default function Chat() {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  // useChat automatically handles the streaming state and messages array
-  const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading, stop } = useChat();
+  
+  // destructuring useChat with defaults to prevent initialization errors
+  const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading } = useChat({
+    api: '/api/chat',
+    onError: (error) => console.error("Chat Hook Error:", error),
+  });
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const theme = {
@@ -25,6 +30,15 @@ export default function Chat() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Handler to allow 'Enter' key to submit
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      const formEvent = new Event('submit', { cancelable: true, bubbles: true });
+      handleSubmit(formEvent as unknown as React.FormEvent<HTMLFormElement>);
+    }
+  };
 
   return (
     <div style={{ 
@@ -70,12 +84,12 @@ export default function Chat() {
 
               <div style={{ 
                 maxWidth: m.role === 'user' ? '85%' : '100%', 
-                padding: m.role === 'user' ? '12px 20px' : '0px', 
+                padding: m.role === 'user' ? '12px 20px' : '12px 0px', 
                 borderRadius: '24px', 
                 backgroundColor: m.role === 'user' ? theme.userBubble : 'transparent',
                 lineHeight: '1.6'
               }}>
-                <div style={{ color: m.role === 'assistant' ? theme.aiText : 'inherit' }} className="prose">
+                <div style={{ color: m.role === 'assistant' ? theme.aiText : 'inherit' }}>
                   <ReactMarkdown>{m.content}</ReactMarkdown>
                 </div>
               </div>
@@ -95,13 +109,24 @@ export default function Chat() {
               rows={1}
               value={input}
               onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder="Message Tribit..."
               style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: theme.text, padding: '10px', fontSize: '16px', resize: 'none' }}
             />
-            <button type="submit" disabled={!input?.trim() || isLoading} style={{ 
-              width: '32px', height: '32px', borderRadius: '50%', border: 'none', 
-              backgroundColor: input?.trim() ? theme.text : '#ccc', color: theme.bg, cursor: 'pointer'
-            }}>
+            <button 
+              type="submit" 
+              disabled={isLoading || !input.trim()}
+              style={{ 
+                width: '32px', height: '32px', borderRadius: '50%', border: 'none', 
+                backgroundColor: (input.trim() && !isLoading) ? theme.text : '#ccc', 
+                color: theme.bg, 
+                cursor: (input.trim() && !isLoading) ? 'pointer' : 'default',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                transition: 'all 0.2s'
+              }}>
               {isLoading ? '...' : '↑'}
             </button>
           </div>
