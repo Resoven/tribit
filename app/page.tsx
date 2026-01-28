@@ -31,27 +31,23 @@ export default function Chat() {
         body: JSON.stringify({ messages: [...messages, userMsg] }),
       });
 
-      if (!response.ok) throw new Error('Failed to connect');
-
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let assistantText = '';
 
-      // Add the empty assistant bubble immediately
       setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
 
       while (true) {
         const { done, value } = await reader!.read();
         if (done) break;
         
-        const chunk = decoder.decode(value);
-        
-        // CLEANING THE STREAM: OpenAI/Vercel format looks like 0:"text"
-        // This regex extracts just the text inside the quotes
+        const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split('\n');
+        
         for (const line of lines) {
           if (line.startsWith('0:')) {
-            const content = line.slice(3, -1); // Remove 0:" and "
+            // This safely extracts text between the first and last quote
+            const content = line.slice(line.indexOf('"') + 1, line.lastIndexOf('"'));
             assistantText += content.replace(/\\n/g, '\n');
           }
         }
@@ -63,8 +59,7 @@ export default function Chat() {
         });
       }
     } catch (err) {
-      console.error(err);
-      alert("System Error: Check logs.");
+      alert("System Error: Build might have failed.");
     } finally {
       setIsLoading(false);
     }
@@ -78,19 +73,19 @@ export default function Chat() {
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {messages.map((m, i) => (
-            <div key={i} style={{ marginBottom: '20px' }}>
+            <div key={i} style={{ marginBottom: '25px' }}>
               <div style={{ fontWeight: 'bold', fontSize: '0.7rem', opacity: 0.5, marginBottom: '5px' }}>
                 {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
-              <div style={{ whiteSpace: 'pre-wrap' }}>{m.content}</div>
+              <ReactMarkdown>{m.content}</ReactMarkdown>
             </div>
           ))}
           <div ref={messagesEndRef} />
         </div>
       </div>
       <form onSubmit={sendMessage} style={{ padding: '20px', maxWidth: '700px', margin: '0 auto', width: '100%' }}>
-        <div style={{ display: 'flex', gap: '10px', backgroundColor: '#212121', padding: '12px', borderRadius: '15px', border: '1px solid #444' }}>
-          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Message Tribit..." style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none' }} />
+        <div style={{ display: 'flex', gap: '10px', backgroundColor: '#212121', padding: '12px', borderRadius: '15px' }}>
+          <input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Message..." style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none' }} />
           <button type="submit" disabled={isLoading} style={{ background: '#fff', color: '#000', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', border: 'none' }}>
             {isLoading ? '...' : '↑'}
           </button>
