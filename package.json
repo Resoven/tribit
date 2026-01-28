@@ -17,8 +17,8 @@
     "ai": "latest",
     "lucide-react": "latest",
     "next": "15.1.11",
-    "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-markdown": "latest",
     "typescript": "latest"
   }
