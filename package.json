@@ -9,15 +9,16 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "latest",
+    "@ai-sdk/openai": "^3.0.21",
     "@ai-sdk/react": "latest",
-    "ai": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "ai": "^6.0.57",
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "typescript": "latest",
-    "@types/react": "latest",
-    "@types/node": "latest",
-    "@types/react-dom": "latest"
+    "react-markdown": "^10.1.0",
+    "typescript": "latest"
   }
 }
