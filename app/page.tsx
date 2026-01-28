@@ -3,98 +3,45 @@
 export const dynamic = 'force-dynamic';
 
 import { useChat } from '@ai-sdk/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 export default function Chat() {
   const [mounted, setMounted] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  
-  const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading } = useChat();
-  
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Force sync with browser
   useEffect(() => {
     setMounted(true);
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const theme = {
-    bg: isDarkMode ? '#0d0d0d' : '#ffffff',
-    headerBg: isDarkMode ? 'rgba(13, 13, 13, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-    text: isDarkMode ? '#ececec' : '#000000',
-    userBubble: isDarkMode ? '#2f2f2f' : '#f4f4f4',
-    inputBg: isDarkMode ? '#212121' : '#ffffff',
-    borderColor: isDarkMode ? '#333333' : '#e5e5e5',
-    aiText: isDarkMode ? '#d1d1d1' : '#374151',
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      // Directly call handleSubmit without extra wrapper logic to avoid "x is not a function"
-      const event = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
-      handleSubmit(event);
-    }
-  };
-
-  if (!mounted) return null;
+  // If we aren't in the browser yet, show a simple loading state
+  if (!mounted) return <div style={{ background: '#000', height: '100vh' }} />;
 
   return (
-    <div style={{ 
-      display: 'flex', flexDirection: 'column', height: '100vh', 
-      backgroundColor: theme.bg, color: theme.text, 
-      fontFamily: '-apple-system, system-ui, sans-serif',
-      transition: 'background-color 0.3s ease' 
-    }}>
-      
-      <header style={{ 
-        padding: '12px 20px', display: 'flex', justifyContent: 'space-between', 
-        alignItems: 'center', borderBottom: `1px solid ${theme.borderColor}`,
-        backgroundColor: theme.headerBg, backdropFilter: 'blur(10px)',
-        position: 'sticky', top: 0, zIndex: 100
-      }}>
-        <div style={{ fontWeight: '600', fontSize: '1.1rem' }}>Tribit AI ✨</div>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ cursor: 'pointer', background: 'none', border: 'none', fontSize: '1.2rem' }}>
-            {isDarkMode ? '☀️' : '🌙'}
-          </button>
-          <button onClick={() => setMessages([])} style={{ padding: '6px 14px', borderRadius: '8px', border: `1px solid ${theme.borderColor}`, background: 'none', color: theme.text, cursor: 'pointer', fontSize: '0.85rem' }}>
-            New Chat
-          </button>
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec', fontFamily: 'sans-serif' }}>
+      <header style={{ padding: '15px', textAlign: 'center', borderBottom: '1px solid #333' }}>
+        <strong>Tribit AI ✨</strong>
       </header>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '20px 0' }}>
-        <div style={{ maxWidth: '720px', margin: '0 auto', width: '100%', padding: '0 20px' }}>
-          {messages.length === 0 && (
-            <div style={{ textAlign: 'center', marginTop: '20vh', opacity: 0.5 }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: '500' }}>How can I help you today?</h2>
-            </div>
-          )}
-
-          {messages?.map((m) => (
-            <div key={m.id} style={{ 
-              marginBottom: '35px', display: 'flex', flexDirection: 'column',
-              alignItems: m.role === 'user' ? 'flex-end' : 'flex-start'
-            }}>
-              <div style={{ fontWeight: '700', fontSize: '0.75rem', marginBottom: '8px', opacity: 0.6 }}>
-                {m.role === 'user' ? 'You' : 'Tribit'}
-              </div>
-
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+        <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+          {messages.map((m) => (
+            <div key={m.id} style={{ marginBottom: '20px', textAlign: m.role === 'user' ? 'right' : 'left' }}>
               <div style={{ 
-                maxWidth: m.role === 'user' ? '85%' : '100%', 
-                padding: m.role === 'user' ? '12px 20px' : '0px', 
-                borderRadius: '24px', 
-                backgroundColor: m.role === 'user' ? theme.userBubble : 'transparent',
-                lineHeight: '1.6'
+                display: 'inline-block', 
+                padding: '10px 15px', 
+                borderRadius: '15px', 
+                backgroundColor: m.role === 'user' ? '#2f2f2f' : 'transparent',
+                maxWidth: '80%',
+                textAlign: 'left'
               }}>
-                <div style={{ color: m.role === 'assistant' ? theme.aiText : 'inherit' }}>
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
-                </div>
+                <ReactMarkdown>{m.content}</ReactMarkdown>
               </div>
             </div>
           ))}
@@ -102,38 +49,31 @@ export default function Chat() {
         </div>
       </div>
 
-      <div style={{ padding: '0 20px 30px 20px', backgroundColor: theme.bg }}>
-        <form onSubmit={handleSubmit} style={{ maxWidth: '720px', margin: '0 auto' }}>
-          <div style={{ 
-            display: 'flex', alignItems: 'flex-end', backgroundColor: theme.inputBg, 
-            borderRadius: '26px', border: `1px solid ${theme.borderColor}`, padding: '8px 12px'
-          }}>
-            <textarea
-              rows={1}
-              value={input}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              placeholder="Message Tribit..."
-              style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: theme.text, padding: '10px', fontSize: '16px', resize: 'none' }}
-            />
-            <button 
-              type="submit" 
-              disabled={isLoading || !input?.trim()}
-              style={{ 
-                width: '32px', height: '32px', borderRadius: '50%', border: 'none', 
-                backgroundColor: (input?.trim() && !isLoading) ? theme.text : '#ccc', 
-                color: theme.bg, 
-                cursor: (input?.trim() && !isLoading) ? 'pointer' : 'default',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '18px'
-              }}>
-              {isLoading ? '...' : '↑'}
-            </button>
-          </div>
-        </form>
-      </div>
+      <form onSubmit={handleSubmit} style={{ padding: '20px', maxWidth: '720px', margin: '0 auto', width: '100%' }}>
+        <div style={{ display: 'flex', gap: '10px', backgroundColor: '#212121', padding: '10px', borderRadius: '15px' }}>
+          <input
+            value={input}
+            onChange={handleInputChange}
+            placeholder="Type a message..."
+            style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none' }}
+          />
+          <button 
+            type="submit" 
+            disabled={isLoading || !input.trim()}
+            style={{ 
+              backgroundColor: input.trim() ? '#fff' : '#555', 
+              color: '#000', 
+              border: 'none', 
+              borderRadius: '50%', 
+              width: '30px', 
+              height: '30px', 
+              cursor: 'pointer' 
+            }}
+          >
+            ↑
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
