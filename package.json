@@ -14,7 +14,7 @@
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "ai": "^latest",
+    "ai": "latest",
     "lucide-react": "^latest",
     "next": "15.1.6",
     "react": "19.0.0",
