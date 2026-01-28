@@ -9,20 +9,33 @@ import ReactMarkdown from 'react-markdown';
 export default function Chat() {
   const [mounted, setMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [localInput, setLocalInput] = useState('');
   
-  // No local state needed for input anymore—we let the SDK handle it directly
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
+  // We only use messages and append from the hook
+  const { messages, append, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   if (!mounted) return null;
+
+  // CUSTOM MANUAL HANDLER
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!localInput.trim() || isLoading) return;
+
+    const userMessage = localInput;
+    setLocalInput(''); // Clear UI immediately
+
+    try {
+      // Force the SDK to trigger a manual request
+      await append({ role: 'user', content: userMessage });
+    } catch (error) {
+      console.error("Manual Send Error:", error);
+      alert("Failed to send message. Check console.");
+    }
+  };
 
   const theme = {
     bg: isDarkMode ? '#0d0d0d' : '#ffffff',
@@ -47,9 +60,7 @@ export default function Chat() {
               <div style={{ fontWeight: 'bold', fontSize: '0.7rem', marginBottom: '5px', opacity: 0.5 }}>
                 {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
-              <div style={{ lineHeight: '1.6' }}>
-                <ReactMarkdown>{m.content}</ReactMarkdown>
-              </div>
+              <ReactMarkdown>{m.content}</ReactMarkdown>
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -57,21 +68,18 @@ export default function Chat() {
       </div>
 
       <div style={{ padding: '20px' }}>
-        <form onSubmit={handleSubmit} style={{ maxWidth: '720px', margin: '0 auto' }}>
+        <form onSubmit={sendMessage} style={{ maxWidth: '720px', margin: '0 auto' }}>
           <div style={{ display: 'flex', gap: '10px', backgroundColor: theme.inputBg, padding: '12px', borderRadius: '15px', border: `1px solid ${theme.border}` }}>
             <input
-              value={input}
-              onChange={handleInputChange}
+              value={localInput}
+              onChange={(e) => setLocalInput(e.target.value)}
               placeholder="Message Tribit..."
               style={{ flex: 1, background: 'none', border: 'none', color: theme.text, outline: 'none', fontSize: '16px' }}
             />
             <button 
               type="submit" 
-              disabled={isLoading || !input?.trim()}
-              style={{ 
-                backgroundColor: (!input?.trim() || isLoading) ? '#666' : theme.text, 
-                color: theme.bg, border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' 
-              }}
+              disabled={isLoading || !localInput.trim()}
+              style={{ backgroundColor: (isLoading || !localInput.trim()) ? '#555' : theme.text, color: theme.bg, border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' }}
             >
               {isLoading ? '...' : '↑'}
             </button>
