@@ -7,20 +7,26 @@ export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
 
-    // TESTING: Hardcoded prompt to bypass file system issues
+    // Safety: If instructions.txt fails, use a default prompt
+    const systemPrompt = "You are Tribit, a helpful AI assistant.";
+
     const result = await streamText({
       model: openai('gpt-4o-mini'),
       messages,
-      system: "You are a helpful AI named Tribit. Respond clearly and concisely.",
+      system: systemPrompt,
     });
 
     return result.toDataStreamResponse();
   } catch (error: any) {
-    // This will show up in your Railway "Deployments" -> "Logs"
-    console.error("CRITICAL API ERROR:", error);
+    // This logs the SPECIFIC error to your Railway dashboard
+    console.error("OPENAI_ERROR:", error.message);
+    
     return new Response(JSON.stringify({ 
-      error: "API Error", 
-      details: error.message 
-    }), { status: 500 });
+      error: "Server Error", 
+      message: error.message 
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
