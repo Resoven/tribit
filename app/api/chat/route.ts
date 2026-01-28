@@ -8,13 +8,14 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     const result = await streamText({
-      model: openai('gpt-4o-mini'), 
+      model: openai('gpt-4o-mini'),
       messages,
       system: "You are Tribit, a helpful AI assistant.",
     });
 
-    // Use the older compatible method instead of toDataStreamResponse
-    return result.toAIStreamResponse();
+    // Instead of calling a helper function that might not exist, 
+    // we return the data stream directly.
+    return result.toDataStreamResponse();
   } catch (error: any) {
     console.error("API Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), { 
