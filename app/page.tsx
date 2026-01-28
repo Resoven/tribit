@@ -9,20 +9,14 @@ import ReactMarkdown from 'react-markdown';
 export default function Chat() {
   const [mounted, setMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [localInput, setLocalInput] = useState('');
   
-  // Use the standard hook variables
-  const { messages, input, setInput, handleSubmit, isLoading } = useChat();
+  // No local state needed for input anymore—we let the SDK handle it directly
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Sync our local typing with the SDK's internal state
-  useEffect(() => {
-    setInput(localInput);
-  }, [localInput, setInput]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -53,7 +47,9 @@ export default function Chat() {
               <div style={{ fontWeight: 'bold', fontSize: '0.7rem', marginBottom: '5px', opacity: 0.5 }}>
                 {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
-              <ReactMarkdown>{m.content}</ReactMarkdown>
+              <div style={{ lineHeight: '1.6' }}>
+                <ReactMarkdown>{m.content}</ReactMarkdown>
+              </div>
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -61,24 +57,19 @@ export default function Chat() {
       </div>
 
       <div style={{ padding: '20px' }}>
-        {/* We use the SDK's handleSubmit but keep our localInput for the UI */}
-        <form onSubmit={(e) => {
-            handleSubmit(e);
-            setLocalInput(''); // Clear the UI box
-          }} 
-          style={{ maxWidth: '720px', margin: '0 auto' }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: '720px', margin: '0 auto' }}>
           <div style={{ display: 'flex', gap: '10px', backgroundColor: theme.inputBg, padding: '12px', borderRadius: '15px', border: `1px solid ${theme.border}` }}>
             <input
-              value={localInput}
-              onChange={(e) => setLocalInput(e.target.value)}
+              value={input}
+              onChange={handleInputChange}
               placeholder="Message Tribit..."
               style={{ flex: 1, background: 'none', border: 'none', color: theme.text, outline: 'none', fontSize: '16px' }}
             />
             <button 
               type="submit" 
-              disabled={isLoading || !localInput.trim()}
+              disabled={isLoading || !input?.trim()}
               style={{ 
-                backgroundColor: (!localInput.trim() || isLoading) ? '#666' : theme.text, 
+                backgroundColor: (!input?.trim() || isLoading) ? '#666' : theme.text, 
                 color: theme.bg, border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' 
               }}
             >
