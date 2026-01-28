@@ -115,12 +115,12 @@ export default function Chat() {
             />
             <button 
               type="submit" 
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input?.trim()}
               style={{ 
                 width: '32px', height: '32px', borderRadius: '50%', border: 'none', 
-                backgroundColor: (input.trim() && !isLoading) ? theme.text : '#ccc', 
+                backgroundColor: (input?.trim() && !isLoading) ? theme.text : '#ccc' 
                 color: theme.bg, 
-                cursor: (input.trim() && !isLoading) ? 'pointer' : 'default',
+                cursor: (input?.trim() && !isLoading) ? 'pointer' : 'default',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
