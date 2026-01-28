@@ -13,10 +13,13 @@ export async function POST(req: Request) {
       system: "You are Tribit, a helpful AI assistant.",
     });
 
-    // This is the AI SDK 5 way of responding
-    return result.toDataStreamResponse();
+    // Use the older compatible method instead of toDataStreamResponse
+    return result.toAIStreamResponse();
   } catch (error: any) {
     console.error("API Error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
