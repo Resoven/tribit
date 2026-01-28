@@ -6,17 +6,28 @@ import path from 'path';
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  try {
+    const { messages } = await req.json();
 
-  // Read your instructions.txt
-  const filePath = path.join(process.cwd(), 'instructions.txt');
-  const systemInstructions = await fs.readFile(filePath, 'utf8');
+    // Secure pathing for Railway
+    const filePath = path.join(process.cwd(), 'instructions.txt');
+    let systemInstructions = "You are a helpful assistant."; // Default fallback
 
-  const result = await streamText({
-    model: openai('gpt-4o-mini'),
-    system: systemInstructions,
-    messages,
-  });
+    try {
+      systemInstructions = await fs.readFile(filePath, 'utf8');
+    } catch (e) {
+      console.error("Warning: instructions.txt not found, using default.", e);
+    }
 
-  return result.toDataStreamResponse();
+    const result = await streamText({
+      model: openai('gpt-4o-mini'),
+      system: systemInstructions,
+      messages,
+    });
+
+    return result.toDataStreamResponse();
+  } catch (error) {
+    console.error("Chat API Error:", error);
+    return new Response(JSON.stringify({ error: "Failed to process chat" }), { status: 500 });
+  }
 }
