@@ -10,16 +10,17 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.21",
-    "@ai-sdk/react": "latest",
+    "@ai-sdk/react": "^3.0.59",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "ai": "latest",
+    "ai": "^6.0.57",
     "lucide-react": "latest",
     "next": "15.1.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "latest",
-    "typescript": "latest"
+    "typescript": "latest",
+    "zod": "^4.3.6"
   }
 }
