@@ -10,8 +10,13 @@ export default function Chat() {
   const [mounted, setMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   
-  // We pull setInput specifically to bypass the internal handleInputChange
-  const { messages = [], input = '', setInput, handleSubmit, isLoading = false } = useChat();
+  // Local state for the input to guarantee typing works
+  const [localInput, setLocalInput] = useState('');
+  
+  const { messages, append, isLoading } = useChat({
+    api: '/api/chat',
+  });
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -19,12 +24,19 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-    if (messages?.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  if (!mounted) return <div style={{ background: '#0d0d0d', height: '100vh' }} />;
+  if (!mounted) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!localInput.trim() || isLoading) return;
+    
+    const val = localInput;
+    setLocalInput(''); // Clear input immediately for better UX
+    await append({ role: 'user', content: val });
+  };
 
   const theme = {
     bg: isDarkMode ? '#0d0d0d' : '#ffffff',
@@ -33,10 +45,8 @@ export default function Chat() {
     border: isDarkMode ? '#333' : '#e5e5e5'
   };
 
-  const isInputEmpty = !input || input.trim().length === 0;
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: theme.bg, color: theme.text, fontFamily: 'sans-serif', transition: 'all 0.2s' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: theme.bg, color: theme.text, fontFamily: 'sans-serif' }}>
       <header style={{ padding: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `1px solid ${theme.border}` }}>
         <strong>Tribit AI ✨</strong>
         <button onClick={() => setIsDarkMode(!isDarkMode)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}>
@@ -46,14 +56,12 @@ export default function Chat() {
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
         <div style={{ maxWidth: '720px', margin: '0 auto' }}>
-          {messages.map((m) => (
+          {messages?.map((m) => (
             <div key={m.id} style={{ marginBottom: '25px' }}>
               <div style={{ fontWeight: 'bold', fontSize: '0.7rem', marginBottom: '5px', opacity: 0.5 }}>
                 {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
-              <div style={{ lineHeight: '1.6' }}>
-                <ReactMarkdown>{m.content}</ReactMarkdown>
-              </div>
+              <ReactMarkdown>{m.content}</ReactMarkdown>
             </div>
           ))}
           <div ref={messagesEndRef} />
@@ -62,28 +70,22 @@ export default function Chat() {
 
       <div style={{ padding: '20px' }}>
         <form onSubmit={handleSubmit} style={{ maxWidth: '720px', margin: '0 auto' }}>
-          <div style={{ 
-            display: 'flex', gap: '10px', backgroundColor: theme.inputBg, 
-            padding: '12px', borderRadius: '15px', border: `1px solid ${theme.border}` 
-          }}>
+          <div style={{ display: 'flex', gap: '10px', backgroundColor: theme.inputBg, padding: '12px', borderRadius: '15px', border: `1px solid ${theme.border}` }}>
             <input
-              value={input}
-              onChange={(e) => setInput(e.target.value)} // Direct state update
+              value={localInput}
+              onChange={(e) => setLocalInput(e.target.value)}
               placeholder="Message Tribit..."
               style={{ flex: 1, background: 'none', border: 'none', color: theme.text, outline: 'none', fontSize: '16px' }}
             />
             <button 
               type="submit" 
-              disabled={isLoading || isInputEmpty}
+              disabled={isLoading || !localInput.trim()}
               style={{ 
-                backgroundColor: (isInputEmpty || isLoading) ? '#666' : theme.text, 
-                color: theme.bg, 
-                border: 'none', borderRadius: '50%', width: '32px', height: '32px', 
-                cursor: (isInputEmpty || isLoading) ? 'default' : 'pointer',
-                fontWeight: 'bold'
+                backgroundColor: (!localInput.trim() || isLoading) ? '#666' : theme.text, 
+                color: theme.bg, border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' 
               }}
             >
-              {isLoading ? '...' : '↑'}
+              ↑
             </button>
           </div>
         </form>
