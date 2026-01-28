@@ -190,11 +190,11 @@ export default function Chat() {
             ) : (
               <button 
                 type="submit" 
-                disabled={!input.trim()} 
+                disabled={!input?.trim()} 
                 style={{ 
                   width: '32px', height: '32px', borderRadius: '50%', border: 'none', 
-                  backgroundColor: input.trim() ? theme.text : (isDarkMode ? '#333' : '#e5e5e5'), 
-                  color: theme.bg, cursor: input.trim() ? 'pointer' : 'default',
+                  backgroundColor: input?.trim() ? theme.text : (isDarkMode ? '#333' : '#e5e5e5'), 
+                  color: theme.bg, cursor: input?.trim() ? 'pointer' : 'default',
                   transition: 'all 0.2s', marginBottom: '5px', fontSize: '1.2rem'
                 }}
               >
