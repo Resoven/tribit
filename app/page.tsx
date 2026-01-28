@@ -1,4 +1,5 @@
 'use client';
+
 export const dynamic = 'force-dynamic';
 
 import { useChat } from '@ai-sdk/react';
@@ -9,17 +10,17 @@ export default function Chat() {
   const [mounted, setMounted] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   
-  const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading } = useChat({
-    api: '/api/chat',
-    onError: (error) => console.error("Chat Hook Error:", error),
-  });
+  const { messages, input, handleInputChange, handleSubmit, setMessages, isLoading } = useChat();
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Set mounted to true once component hits the browser
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const theme = {
     bg: isDarkMode ? '#0d0d0d' : '#ffffff',
@@ -31,19 +32,15 @@ export default function Chat() {
     aiText: isDarkMode ? '#d1d1d1' : '#374151',
   };
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      const formEvent = new Event('submit', { cancelable: true, bubbles: true });
-      handleSubmit(formEvent as unknown as React.FormEvent<HTMLFormElement>);
+      // Directly call handleSubmit without extra wrapper logic to avoid "x is not a function"
+      const event = { preventDefault: () => {} } as React.FormEvent<HTMLFormElement>;
+      handleSubmit(event);
     }
   };
 
-  // Prevent server-side rendering mismatch
   if (!mounted) return null;
 
   return (
@@ -90,7 +87,7 @@ export default function Chat() {
 
               <div style={{ 
                 maxWidth: m.role === 'user' ? '85%' : '100%', 
-                padding: m.role === 'user' ? '12px 20px' : '12px 0px', 
+                padding: m.role === 'user' ? '12px 20px' : '0px', 
                 borderRadius: '24px', 
                 backgroundColor: m.role === 'user' ? theme.userBubble : 'transparent',
                 lineHeight: '1.6'
@@ -106,7 +103,7 @@ export default function Chat() {
       </div>
 
       <div style={{ padding: '0 20px 30px 20px', backgroundColor: theme.bg }}>
-        <form onSubmit={(e) => { e.preventDefault(); alert("Click Detected!"); handleSubmit(e); }} style={{ maxWidth: '720px', margin: '0 auto' }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: '720px', margin: '0 auto' }}>
           <div style={{ 
             display: 'flex', alignItems: 'flex-end', backgroundColor: theme.inputBg, 
             borderRadius: '26px', border: `1px solid ${theme.borderColor}`, padding: '8px 12px'
@@ -121,7 +118,7 @@ export default function Chat() {
             />
             <button 
               type="submit" 
-              disabled={false}
+              disabled={isLoading || !input?.trim()}
               style={{ 
                 width: '32px', height: '32px', borderRadius: '50%', border: 'none', 
                 backgroundColor: (input?.trim() && !isLoading) ? theme.text : '#ccc', 
@@ -130,8 +127,7 @@ export default function Chat() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '18px',
-                transition: 'all 0.2s'
+                fontSize: '18px'
               }}>
               {isLoading ? '...' : '↑'}
             </button>
