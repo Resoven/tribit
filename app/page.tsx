@@ -7,13 +7,12 @@ import { useRef, useEffect, useState } from 'react';
 
 export default function Chat() {
   const [isMounted, setIsMounted] = useState(false);
+  const [localInput, setLocalInput] = useState(''); // Local buffer for typing
   
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, append, isLoading, error } = useChat({
     api: '/api/chat',
-    onResponse: () => console.log("Server responded!"),
-    onError: (err) => console.error("Stream Error:", err)
   });
-
+  
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -23,6 +22,16 @@ export default function Chat() {
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Handle Send
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!localInput.trim() || isLoading) return;
+    
+    // Send to AI SDK
+    await append({ role: 'user', content: localInput });
+    setLocalInput(''); // Clear local box
+  };
 
   if (!isMounted) return null;
 
@@ -48,10 +57,10 @@ export default function Chat() {
       </main>
 
       <footer style={{ padding: '1.5rem', borderTop: '1px solid #222', backgroundColor: '#000' }}>
-        <form onSubmit={handleSubmit} style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', gap: '10px' }}>
+        <form onSubmit={handleSend} style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', gap: '10px' }}>
           <input
-            value={input ?? ''} // Relinked to AI State with a safety fallback
-            onChange={handleInputChange}
+            value={localInput} 
+            onChange={(e) => setLocalInput(e.target.value)} 
             placeholder="Type your message..."
             style={{ 
               flex: 1, 
@@ -65,20 +74,21 @@ export default function Chat() {
           />
           <button
             type="submit"
-            disabled={isLoading || !(input ?? '').trim()}
+            disabled={isLoading || !localInput.trim()}
             style={{ 
               padding: '0 20px', 
               borderRadius: '8px', 
-              backgroundColor: (isLoading || !(input ?? '').trim()) ? '#222' : '#fff', 
+              backgroundColor: (isLoading || !localInput.trim()) ? '#222' : '#fff', 
               color: '#000',
               fontWeight: 'bold',
-              cursor: (isLoading || !(input ?? '').trim()) ? 'default' : 'pointer',
+              cursor: (isLoading || !localInput.trim()) ? 'default' : 'pointer',
               border: 'none'
             }}
           >
             {isLoading ? '...' : 'Send'}
           </button>
         </form>
+        {error && <div style={{ color: 'red', fontSize: '11px', textAlign: 'center', marginTop: '10px' }}>{error.message}</div>}
       </footer>
     </div>
   );
