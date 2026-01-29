@@ -8,15 +8,16 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     const result = await streamText({
-      model: openai('gpt-4o-mini'),
+      model: openai('gpt-4o-mini'), // Use a smaller model for faster testing
       messages,
-      system: "You are Tribit, a helpful AI assistant.",
     });
 
-    return new Response(result.fullStream, {
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    return result.toDataStreamResponse();
+  } catch (error) {
+    console.error("API Error:", error);
+    return new Response(JSON.stringify({ error: "Failed to fetch from OpenAI" }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
-  } catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
