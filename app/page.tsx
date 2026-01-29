@@ -19,8 +19,8 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-    if (isMounted && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (isMounted) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isMounted]);
 
