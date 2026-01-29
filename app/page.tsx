@@ -1,6 +1,5 @@
 'use client';
 
-// Tells Next.js to skip static generation for this page
 export const dynamic = 'force-dynamic';
 
 import { useChat } from '@ai-sdk/react';
@@ -15,23 +14,23 @@ export default function Chat() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Hydration Guard: Prevents the "frozen input" by waiting for the browser
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Auto-scroll to bottom
   useEffect(() => {
-    if (isMounted) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (isMounted && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isMounted]);
 
-  if (!isMounted) return null; // Or a simple loading spinner
+  if (!isMounted) {
+    return <div style={{ backgroundColor: '#0d0d0d', height: '100vh' }} />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec', fontFamily: 'sans-serif' }}>
-      <header style={{ padding: '15px', textAlign: 'center', borderBottom: '1px solid #333', backgroundColor: '#0d0d0d' }}>
+      <header style={{ padding: '15px', textAlign: 'center', borderBottom: '1px solid #333' }}>
         <strong>Tribit AI ✨</strong>
       </header>
 
@@ -54,12 +53,12 @@ export default function Chat() {
             </div>
           ))}
           {isLoading && <div style={{ color: '#555', fontStyle: 'italic' }}>Tribit is typing...</div>}
-          {error && <div style={{ color: 'red', fontSize: '0.8rem' }}>Error: {error.message}</div>}
+          {error && <div style={{ color: '#ff4a4a', fontSize: '0.8rem' }}>Error: {error.message}</div>}
           <div ref={messagesEndRef} />
         </div>
       </main>
 
-      <footer style={{ padding: '20px', backgroundColor: '#0d0d0d' }}>
+      <footer style={{ padding: '20px' }}>
         <form onSubmit={handleSubmit} style={{ maxWidth: '750px', margin: '0 auto' }}>
           <div style={{ display: 'flex', backgroundColor: '#212121', borderRadius: '12px', border: '1px solid #444', padding: '4px 12px' }}>
             <input 
@@ -86,7 +85,7 @@ export default function Chat() {
             </button>
           </div>
         </form>
-      </header>
+      </footer>
     </div>
   );
 }
