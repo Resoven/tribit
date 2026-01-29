@@ -8,7 +8,7 @@ import { useRef, useEffect, useState } from 'react';
 export default function Chat() {
   const [isMounted, setIsMounted] = useState(false);
   
-  // Initialize useChat
+  // Initialize useChat with default fallbacks
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: '/api/chat',
   });
@@ -25,11 +25,10 @@ export default function Chat() {
     }
   }, [messages]);
 
-  // Form handler with safety check for undefined 'input'
+  // Prevent submission if input is undefined or empty
   const onFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const safeInput = input || ''; // Safety Guard
-    if (!safeInput.trim() || isLoading) return;
+    if (!(input ?? '').trim() || isLoading) return;
     handleSubmit(e);
   };
 
@@ -37,8 +36,8 @@ export default function Chat() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#000', color: '#fff', fontFamily: 'sans-serif' }}>
-      <header style={{ padding: '1rem', borderBottom: '1px solid #222', textAlign: 'center', fontWeight: 'bold' }}>
-        Tribit AI ✨
+      <header style={{ padding: '1rem', borderBottom: '1px solid #222', textAlign: 'center' }}>
+        <strong>Tribit AI ✨</strong>
       </header>
 
       <main style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
@@ -49,45 +48,40 @@ export default function Chat() {
             </div>
           )}
           {messages.map((m) => (
-            <div key={m.id} style={{ marginBottom: '1.5rem', padding: '1rem', borderRadius: '8px', backgroundColor: m.role === 'user' ? '#111' : 'transparent', border: m.role === 'user' ? '1px solid #222' : 'none' }}>
-              <div style={{ fontSize: '0.7rem', color: m.role === 'user' ? '#0070f3' : '#10a37f', textTransform: 'uppercase', marginBottom: '0.4rem', fontWeight: 'bold' }}>
-                {m.role === 'user' ? 'You' : 'Tribit'}
+            <div key={m.id} style={{ marginBottom: '1.5rem' }}>
+              <div style={{ fontSize: '0.7rem', color: m.role === 'user' ? '#0070f3' : '#10a37f', fontWeight: 'bold', marginBottom: '4px' }}>
+                {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
-              <div style={{ color: '#eee', lineHeight: '1.5', whiteSpace: 'pre-wrap' }}>
-                {m.content}
-              </div>
+              <div style={{ color: '#eee', whiteSpace: 'pre-wrap' }}>{m.content}</div>
             </div>
           ))}
-          {isLoading && <div style={{ color: '#10a37f', fontSize: '0.8rem' }}>Tribit is typing...</div>}
-          {error && <div style={{ color: '#ff4444', marginTop: '1rem', fontSize: '0.8rem' }}>Error: {error.message}</div>}
           <div ref={scrollRef} />
         </div>
       </main>
 
-      <footer style={{ padding: '1.5rem', borderTop: '1px solid #222', backgroundColor: '#000' }}>
-        <form onSubmit={onFormSubmit} style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', gap: '0.5rem' }}>
+      <footer style={{ padding: '1.5rem', borderTop: '1px solid #222' }}>
+        <form onSubmit={onFormSubmit} style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', gap: '10px' }}>
           <input
-            value={input || ''} 
+            value={input ?? ''} // Fixes the 'undefined' trim error
             onChange={handleInputChange}
-            placeholder="Type a message..."
-            style={{ flex: 1, padding: '0.8rem', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#111', color: '#fff', outline: 'none' }}
+            placeholder="Type here..."
+            style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#111', color: '#fff' }}
           />
           <button
             type="submit"
-            disabled={isLoading || !(input || '').trim()}
+            disabled={isLoading || !(input ?? '').trim()}
             style={{ 
-              padding: '0 1.5rem', 
+              padding: '0 20px', 
               borderRadius: '8px', 
-              border: 'none', 
-              backgroundColor: (isLoading || !(input || '').trim()) ? '#222' : '#fff', 
-              color: (isLoading || !(input || '').trim()) ? '#555' : '#000', 
-              fontWeight: 'bold', 
-              cursor: (isLoading || !(input || '').trim()) ? 'default' : 'pointer' 
+              backgroundColor: (isLoading || !(input ?? '').trim()) ? '#222' : '#fff', 
+              color: '#000',
+              cursor: (isLoading || !(input ?? '').trim()) ? 'default' : 'pointer'
             }}
           >
             {isLoading ? '...' : 'Send'}
           </button>
         </form>
+        {error && <div style={{ color: 'red', fontSize: '12px', marginTop: '10px', textAlign: 'center' }}>{error.message}</div>}
       </footer>
     </div>
   );
