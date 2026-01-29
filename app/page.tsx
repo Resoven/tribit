@@ -7,9 +7,8 @@ import { useRef, useEffect, useState } from 'react';
 
 export default function Chat() {
   const [isMounted, setIsMounted] = useState(false);
-  const [localInput, setLocalInput] = useState(''); // Local buffer for typing
   
-  const { messages, append, isLoading, error } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: '/api/chat',
   });
   
@@ -23,14 +22,18 @@ export default function Chat() {
     if (scrollRef.current) scrollRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Handle Send
-  const handleSend = async (e: React.FormEvent) => {
+  // Wrapped handler to prevent the "d is not a function" crash
+  const onFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!localInput.trim() || isLoading) return;
-    
-    // Send to AI SDK
-    await append({ role: 'user', content: localInput });
-    setLocalInput(''); // Clear local box
+    if (!handleSubmit) {
+      console.error("Chat SDK not fully loaded yet.");
+      return;
+    }
+    try {
+      await handleSubmit(e);
+    } catch (err) {
+      console.error("Submission failed:", err);
+    }
   };
 
   if (!isMounted) return null;
@@ -44,9 +47,9 @@ export default function Chat() {
       <main style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           {messages.map((m) => (
-            <div key={m.id} style={{ marginBottom: '1.5rem' }}>
-              <div style={{ fontSize: '0.7rem', color: m.role === 'user' ? '#0070f3' : '#10a37f', fontWeight: 'bold', marginBottom: '4px' }}>
-                {m.role.toUpperCase()}
+            <div key={m.id} style={{ marginBottom: '1.5rem', borderLeft: m.role === 'user' ? '2px solid #333' : '2px solid #10a37f', paddingLeft: '1rem' }}>
+              <div style={{ fontSize: '0.7rem', color: m.role === 'user' ? '#888' : '#10a37f', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
+                {m.role}
               </div>
               <div style={{ color: '#eee', whiteSpace: 'pre-wrap' }}>{m.content}</div>
             </div>
@@ -56,33 +59,24 @@ export default function Chat() {
         </div>
       </main>
 
-      <footer style={{ padding: '1.5rem', borderTop: '1px solid #222', backgroundColor: '#000' }}>
-        <form onSubmit={handleSend} style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', gap: '10px' }}>
+      <footer style={{ padding: '1.5rem', borderTop: '1px solid #222' }}>
+        <form onSubmit={onFormSubmit} style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', gap: '10px' }}>
           <input
-            value={localInput} 
-            onChange={(e) => setLocalInput(e.target.value)} 
+            value={input ?? ''} 
+            onChange={handleInputChange} 
             placeholder="Type your message..."
-            style={{ 
-              flex: 1, 
-              padding: '12px', 
-              borderRadius: '8px', 
-              border: '1px solid #333', 
-              backgroundColor: '#111', 
-              color: '#fff',
-              outline: 'none'
-            }}
+            style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #333', backgroundColor: '#111', color: '#fff' }}
           />
           <button
             type="submit"
-            disabled={isLoading || !localInput.trim()}
+            disabled={isLoading || !(input ?? '').trim()}
             style={{ 
               padding: '0 20px', 
               borderRadius: '8px', 
-              backgroundColor: (isLoading || !localInput.trim()) ? '#222' : '#fff', 
+              backgroundColor: (isLoading || !(input ?? '').trim()) ? '#222' : '#fff', 
               color: '#000',
               fontWeight: 'bold',
-              cursor: (isLoading || !localInput.trim()) ? 'default' : 'pointer',
-              border: 'none'
+              cursor: 'pointer'
             }}
           >
             {isLoading ? '...' : 'Send'}
