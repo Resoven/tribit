@@ -8,21 +8,24 @@ import { useRef, useEffect, useState } from 'react';
 export default function Chat() {
   const [isMounted, setIsMounted] = useState(false);
   
-  // We use "as any" here to force-fix the TS2339 and TS2353 errors in your environment
+  // Using "as any" to bypass the version mismatch errors in your environment
   const chatHelpers = useChat({
     api: '/api/chat',
+    // Safety fallback: if the library is confused, these defaults help
+    initialInput: '',
   } as any) as any;
 
+  // We extract these specifically to use in the form
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = chatHelpers;
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // This ensures the app doesn't crash on start (React 19 safety)
+  // This ensures the page is ready before showing the UI
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Auto-scroll to the bottom when new messages arrive
+  // Auto-scroll logic
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -39,7 +42,7 @@ export default function Chat() {
 
       <main style={{ flex: 1, overflowY: 'auto', padding: '1rem' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          {messages.map((m: any) => (
+          {messages && messages.map((m: any) => (
             <div key={m.id} style={{ marginBottom: '1.5rem', borderLeft: m.role === 'user' ? '2px solid #333' : '2px solid #10a37f', paddingLeft: '1rem' }}>
               <div style={{ fontSize: '0.7rem', color: m.role === 'user' ? '#888' : '#10a37f', fontWeight: 'bold', marginBottom: '4px', textTransform: 'uppercase' }}>
                 {m.role}
@@ -57,15 +60,18 @@ export default function Chat() {
         <form 
           onSubmit={(e) => {
             e.preventDefault();
-            const safeInput = input ?? '';
-            if (safeInput.trim() && !isLoading) {
+            // Final safety check before sending
+            if (input && input.trim() !== '' && !isLoading) {
               handleSubmit(e);
             }
           }} 
           style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', gap: '10px' }}
         >
           <input
-            value={input ?? ''} 
+            autoFocus
+            autoComplete="off"
+            // If 'input' is undefined from the hook, we use an empty string so it stays "unlocked"
+            value={input || ''} 
             onChange={handleInputChange} 
             placeholder="Ask Tribit anything..."
             style={{ 
@@ -81,27 +87,5 @@ export default function Chat() {
           />
           <button
             type="submit"
-            disabled={isLoading || !(input ?? '').trim()}
-            style={{ 
-              padding: '0 24px', 
-              borderRadius: '10px', 
-              backgroundColor: isLoading ? '#333' : '#fff', 
-              color: '#000', 
-              fontWeight: 'bold', 
-              cursor: isLoading ? 'not-allowed' : 'pointer', 
-              border: 'none',
-              transition: 'opacity 0.2s'
-            }}
-          >
-            {isLoading ? '...' : 'Send'}
-          </button>
-        </form>
-        {error && (
-          <div style={{ color: '#ff4a4a', fontSize: '12px', textAlign: 'center', marginTop: '10px' }}>
-            Error: {error.message}
-          </div>
-        )}
-      </footer>
-    </div>
-  );
-}
+            disabled={isLoading || !input || input.trim() === ''}
+            style
