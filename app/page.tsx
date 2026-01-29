@@ -8,12 +8,8 @@ import ReactMarkdown from 'react-markdown';
 
 export default function Chat() {
   const [isMounted, setIsMounted] = useState(false);
-  
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: '/api/chat',
-    onError: (err) => {
-      console.error("Chat Error:", err);
-    }
   });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -23,85 +19,69 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-    if (isMounted && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (isMounted) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isMounted]);
 
-  // Clean form handler
-  const onFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-    handleSubmit(e);
-  };
-
-  if (!isMounted) {
-    return <div style={{ backgroundColor: '#0d0d0d', height: '100vh' }} />;
-  }
+  if (!isMounted) return null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec', fontFamily: 'sans-serif', overflow: 'hidden' }}>
-      <header style={{ padding: '15px', textAlign: 'center', borderBottom: '1px solid #333', zIndex: 10 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#000000', color: '#ffffff', fontFamily: 'sans-serif' }}>
+      <header style={{ padding: '15px', borderBottom: '1px solid #333', textAlign: 'center' }}>
         <strong>Tribit AI ✨</strong>
+        {isLoading && <span style={{ marginLeft: '10px', fontSize: '10px', color: '#10a37f' }}>● Streaming...</span>}
       </header>
 
-      <main style={{ flex: 1, overflowY: 'auto', padding: '20px', position: 'relative' }}>
-        <div style={{ maxWidth: '750px', margin: '0 auto' }}>
-          {messages.length === 0 && (
-             <div style={{ textAlign: 'center', marginTop: '100px', color: '#555' }}>
-               How can Tribit help you today?
-             </div>
-          )}
+      <main style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {messages.map((m) => (
-            <div key={m.id} style={{ marginBottom: '30px' }}>
-              <div style={{ 
-                fontWeight: 'bold', 
-                fontSize: '0.75rem', 
-                color: m.role === 'user' ? '#aaa' : '#10a37f', 
-                marginBottom: '8px',
-                textTransform: 'uppercase'
-              }}>
-                {m.role === 'user' ? 'You' : 'Tribit'}
+            <div key={m.id} style={{ marginBottom: '25px', padding: '10px', borderRadius: '8px', backgroundColor: m.role === 'user' ? '#1a1a1a' : 'transparent' }}>
+              <div style={{ fontWeight: 'bold', color: m.role === 'user' ? '#0070f3' : '#10a37f', marginBottom: '4px' }}>
+                {m.role === 'user' ? 'YOU' : 'TRIBIT'}
               </div>
-              <div style={{ lineHeight: '1.6', fontSize: '1rem', color: '#d1d1d1' }}>
+              <div style={{ color: '#ffffff', fontSize: '15px', lineHeight: '1.5' }}>
                 <ReactMarkdown>{m.content}</ReactMarkdown>
               </div>
             </div>
           ))}
-          {isLoading && <div style={{ color: '#555', fontStyle: 'italic', marginTop: '10px' }}>Tribit is typing...</div>}
-          {error && <div style={{ color: '#ff4a4a', fontSize: '0.8rem', marginTop: '10px' }}>Error: {error.message}</div>}
           <div ref={messagesEndRef} />
         </div>
       </main>
 
-      <footer style={{ padding: '20px', backgroundColor: '#0d0d0d', position: 'relative', zIndex: 50, pointerEvents: 'auto' }}>
-        <form onSubmit={onFormSubmit} style={{ maxWidth: '750px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', backgroundColor: '#212121', borderRadius: '12px', border: '1px solid #444', padding: '4px 12px' }}>
-            <input 
-              value={input} 
-              onChange={handleInputChange} 
-              placeholder="Message Tribit..." 
-              autoComplete="off"
-              style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none', padding: '12px', fontSize: '16px' }} 
-            />
-            <button 
-              type="submit" 
-              disabled={isLoading || !input?.trim()} 
-              style={{ 
-                background: (isLoading || !input?.trim()) ? '#333' : '#fff', 
-                color: '#000', 
-                borderRadius: '8px', 
-                padding: '0 15px', 
-                cursor: (isLoading || !input?.trim()) ? 'not-allowed' : 'pointer', 
-                border: 'none',
-                fontWeight: 'bold',
-                pointerEvents: 'auto'
-              }}
-            >
-              {isLoading ? '...' : '↑'}
-            </button>
-          </div>
+      <footer style={{ padding: '20px', borderTop: '1px solid #333' }}>
+        <form onSubmit={handleSubmit} style={{ maxWidth: '700px', margin: '0 auto', display: 'flex', gap: '10px' }}>
+          <input 
+            value={input} 
+            onChange={handleInputChange} 
+            placeholder="Type your message..." 
+            style={{ 
+              flex: 1, 
+              padding: '12px', 
+              borderRadius: '8px', 
+              border: '1px solid #444', 
+              backgroundColor: '#111', 
+              color: 'white',
+              outline: 'none'
+            }} 
+          />
+          <button 
+            type="submit" 
+            disabled={isLoading || !input.trim()}
+            style={{ 
+              padding: '0 20px', 
+              borderRadius: '8px', 
+              backgroundColor: isLoading ? '#333' : '#fff', 
+              color: '#000', 
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              border: 'none'
+            }}
+          >
+            Send
+          </button>
         </form>
+        {error && <p style={{ color: 'red', textAlign: 'center', fontSize: '12px' }}>{error.message}</p>}
       </footer>
     </div>
   );
