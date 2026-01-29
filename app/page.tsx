@@ -1,21 +1,33 @@
 'use client';
 
-export const dynamic = 'force-dynamic'; // Prevents prerender errors
+// Tells Next.js to skip static generation for this page
+export const dynamic = 'force-dynamic';
 
 import { useChat } from '@ai-sdk/react';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 export default function Chat() {
+  const [isMounted, setIsMounted] = useState(false);
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: '/api/chat',
   });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Hydration Guard: Prevents the "frozen input" by waiting for the browser
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    setIsMounted(true);
+  }, []);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (isMounted) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isMounted]);
+
+  if (!isMounted) return null; // Or a simple loading spinner
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#0d0d0d', color: '#ececec', fontFamily: 'sans-serif' }}>
@@ -42,6 +54,7 @@ export default function Chat() {
             </div>
           ))}
           {isLoading && <div style={{ color: '#555', fontStyle: 'italic' }}>Tribit is typing...</div>}
+          {error && <div style={{ color: 'red', fontSize: '0.8rem' }}>Error: {error.message}</div>}
           <div ref={messagesEndRef} />
         </div>
       </main>
@@ -50,21 +63,30 @@ export default function Chat() {
         <form onSubmit={handleSubmit} style={{ maxWidth: '750px', margin: '0 auto' }}>
           <div style={{ display: 'flex', backgroundColor: '#212121', borderRadius: '12px', border: '1px solid #444', padding: '4px 12px' }}>
             <input 
-              value={input ?? ''} // Added fallback
+              value={input} 
               onChange={handleInputChange} 
               placeholder="Message Tribit..." 
+              autoComplete="off"
               style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none', padding: '12px', fontSize: '16px' }} 
             />
             <button 
               type="submit" 
-              disabled={isLoading || !(input || '').trim()} // Fixed the crash point
-              style={{ background: (isLoading || !(input || '').trim()) ? '#555' : '#fff', color: '#000', borderRadius: '8px', padding: '0 15px', cursor: 'pointer', border: 'none' }}
+              disabled={isLoading || !input?.trim()} 
+              style={{ 
+                background: (isLoading || !input?.trim()) ? '#555' : '#fff', 
+                color: '#000', 
+                borderRadius: '8px', 
+                padding: '0 15px', 
+                cursor: 'pointer', 
+                border: 'none',
+                fontWeight: 'bold'
+              }}
             >
               ↑
             </button>
           </div>
         </form>
-      </footer>
+      </header>
     </div>
   );
 }
