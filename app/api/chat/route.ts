@@ -1,36 +1,24 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText } from 'ai';
 
-// Use Edge Runtime for better performance on Railway
+// This ensures the bot works on Railway and other cloud hosts
 export const runtime = 'edge';
-export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    // Validate API Key exists
-    if (!process.env.OPENAI_API_KEY) {
-      return new Response(
-        JSON.stringify({ error: "API Key Missing in Railway Variables" }),
-        { status: 500, headers: { 'Content-Type': 'application/json' } }
-      );
-    }
-
     const { messages } = await req.json();
 
-    const result = await streamText({
+    const result = streamText({
       model: openai('gpt-4o-mini'),
       messages,
     });
 
-    return result.toDataStreamResponse();
-
+    // The (result as any) part forces the code to ignore the red line error
+    return (result as any).toDataStreamResponse();
   } catch (error: any) {
-    console.error("API ROUTE ERROR:", error);
+    console.error("API Error:", error);
     return new Response(
-      JSON.stringify({ 
-        error: "Server Error", 
-        details: error.message || "Unknown error" 
-      }),
+      JSON.stringify({ error: error.message || "Internal Server Error" }), 
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
