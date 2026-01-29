@@ -8,8 +8,15 @@ import ReactMarkdown from 'react-markdown';
 
 export default function Chat() {
   const [isMounted, setIsMounted] = useState(false);
+  
   const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
     api: '/api/chat',
+    onError: (err) => {
+      console.error("Chat Error:", err);
+    },
+    onResponse: (response) => {
+      console.log("Received response from API");
+    }
   });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -19,10 +26,17 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
-    if (isMounted) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (isMounted && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isMounted]);
+
+  // Form submit wrapper to debug
+  const onFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    console.log("Submitting message:", input);
+    handleSubmit(e);
+  };
 
   if (!isMounted) {
     return <div style={{ backgroundColor: '#0d0d0d', height: '100vh' }} />;
@@ -36,6 +50,11 @@ export default function Chat() {
 
       <main style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
         <div style={{ maxWidth: '750px', margin: '0 auto' }}>
+          {messages.length === 0 && (
+             <div style={{ textAlign: 'center', marginTop: '100px', color: '#555' }}>
+               How can Tribit help you today?
+             </div>
+          )}
           {messages.map((m) => (
             <div key={m.id} style={{ marginBottom: '30px' }}>
               <div style={{ 
@@ -52,36 +71,38 @@ export default function Chat() {
               </div>
             </div>
           ))}
-          {isLoading && <div style={{ color: '#555', fontStyle: 'italic' }}>Tribit is typing...</div>}
-          {error && <div style={{ color: '#ff4a4a', fontSize: '0.8rem' }}>Error: {error.message}</div>}
+          {isLoading && <div style={{ color: '#555', fontStyle: 'italic', marginTop: '10px' }}>Tribit is typing...</div>}
+          {error && <div style={{ color: '#ff4a4a', fontSize: '0.8rem', marginTop: '10px' }}>Error: {error.message}</div>}
           <div ref={messagesEndRef} />
         </div>
       </main>
 
       <footer style={{ padding: '20px' }}>
-        <form onSubmit={handleSubmit} style={{ maxWidth: '750px', margin: '0 auto' }}>
+        <form onSubmit={onFormSubmit} style={{ maxWidth: '750px', margin: '0 auto' }}>
           <div style={{ display: 'flex', backgroundColor: '#212121', borderRadius: '12px', border: '1px solid #444', padding: '4px 12px' }}>
             <input 
               value={input} 
               onChange={handleInputChange} 
               placeholder="Message Tribit..." 
               autoComplete="off"
+              disabled={isLoading}
               style={{ flex: 1, background: 'none', border: 'none', color: 'white', outline: 'none', padding: '12px', fontSize: '16px' }} 
             />
             <button 
               type="submit" 
               disabled={isLoading || !input?.trim()} 
               style={{ 
-                background: (isLoading || !input?.trim()) ? '#555' : '#fff', 
+                background: (isLoading || !input?.trim()) ? '#333' : '#fff', 
                 color: '#000', 
                 borderRadius: '8px', 
                 padding: '0 15px', 
-                cursor: 'pointer', 
+                cursor: (isLoading || !input?.trim()) ? 'default' : 'pointer', 
                 border: 'none',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                transition: 'all 0.2s ease'
               }}
             >
-              ↑
+              {isLoading ? '...' : '↑'}
             </button>
           </div>
         </form>
